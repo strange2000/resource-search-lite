@@ -8,7 +8,8 @@
 
 Keyword in → pan share links / magnet links / HLS direct links out.
 
-[🇨🇳 简体中文](README.md) · [🏠 Home](https://strange2000.github.io/)
+<a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87_Switch-d29922?style=for-the-badge&logo=googletranslate&logoColor=white" alt="切换到中文" height="28"></a>
+<a href="https://strange2000.github.io/"><img src="https://img.shields.io/badge/%F0%9F%8F%A0_Home-8b949e?style=for-the-badge&logo=githubpages&logoColor=white" alt="Home" height="28"></a>
 
 </div>
 
@@ -23,6 +24,17 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 - 🎞️ **m3u8 to disk** — pull an HLS stream into local `.ts` files; handles multi-bitrate, relative paths and fMP4.
 - 🌐 **One-file web page** — open it and go, bilingual UI with a `中文 / EN` switch.
 - 🧮 **Editable rules** — one regex per line in `scripts/rules.tsv`, effective immediately.
+
+## 🧩 Two independent parts
+
+| | 🛠️ Command-line skill | 🌐 Single-file web page |
+|---|---|---|
+| **Path** | `scripts/` + `SKILL.md` | `web/index.html` |
+| **Needs** | `curl` + a POSIX shell | any browser |
+| **Does** | pan links + magnets + Apple-CMS direct links, scored by seeders / size / quality | pan links + magnets (CORS-limited, no seeder counts) |
+| **Best for** | phone terminals, agents, batch jobs | double-click, static hosting, mobile browsers |
+
+The two parts are **independent**: for the web page download the single file `web/index.html`; for the CLI copy the single folder `scripts/`.
 
 ## 🚀 Quick start
 

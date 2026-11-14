@@ -8,7 +8,8 @@
 
 关键词 → 网盘分享链接 / 磁力链 / m3u8 直链
 
-[🇬🇧 English](README.en.md) · [🏠 首页](https://strange2000.github.io/)
+<a href="README.en.md"><img src="https://img.shields.io/badge/English_Switch-2f81f7?style=for-the-badge&logo=googletranslate&logoColor=white" alt="Switch to English" height="28"></a>
+<a href="https://strange2000.github.io/"><img src="https://img.shields.io/badge/%F0%9F%8F%A0_Home-8b949e?style=for-the-badge&logo=githubpages&logoColor=white" alt="Home" height="28"></a>
 
 </div>
 
@@ -23,6 +24,17 @@
 - 🎞️ **m3u8 落盘**：直链拉成本地 `.ts`，多码率 / 相对路径 / fMP4 都能处理
 - 🌐 **单文件网页**：双击即用，中英双语，右上角一键切换
 - 🧮 **规则可改**：`scripts/rules.tsv` 一行一条正则，改完立即生效
+
+## 🧩 两件东西 · 互不依赖
+
+| | 🛠️ 命令行 skill | 🌐 单文件网页 |
+|---|---|---|
+| **路径** | `scripts/` + `SKILL.md` | `web/index.html` |
+| **依赖** | `curl` + 一个 POSIX shell | 任意浏览器 |
+| **能做** | 网盘 + 磁力 + 苹果CMS 直链，按做种数 / 体积 / 清晰度排序 | 网盘 + 磁力（受 CORS 限制，没有做种数） |
+| **适合** | 手机终端、Agent、批处理 | 双击打开、静态托管、手机浏览器 |
+
+两边**互不依赖**：只要网页就下载 `web/index.html` 一个文件；只要命令行就拷走 `scripts/` 一个目录。
 
 ## 🚀 快速开始
 
