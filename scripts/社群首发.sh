@@ -50,8 +50,7 @@ dl() {
 
 # JSON 压成一行，按 "},{" 切成一条对象一行
 flatten() {
-  { tr -d '\n\r' < "$1"; echo; } | sed 's/},{\}
-{/g'
+  { tr -d '\n\r' < "$1"; echo; } | sed 's/},{/}\n{/g'
 }
 
 echo "条目 $SID → 拉讨论帖列表…"
