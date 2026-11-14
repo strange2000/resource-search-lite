@@ -59,10 +59,10 @@ nval() { # $1=行 $2=键 → $OUT（数字字段）
   esac
 }
 unesc() { # $1 → $OUT（去掉 JSON 转义）
-  OUT=${1//\\\//\/}
-  OUT=${OUT//\\u0026/$AMP}
+  OUT=${1//\\u0026/$AMP}
   OUT=${OUT//\\u003d/=}
   OUT=${OUT//\\u002F/\/}
+  OUT=$(printf '%s' "$OUT" | tr -d '\134')
 }
 jstr() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
 # 相关度：标题要真含关键词（中文按整串，英文按每个词都在）
