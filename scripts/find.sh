@@ -59,7 +59,7 @@ nval() { # $1=行 $2=键 → $OUT（数字字段）
   esac
 }
 unesc() { # $1 → $OUT（去掉 JSON 转义）
-  OUT=${1//\\//}
+  OUT=${1//\\\//\/}
   OUT=${OUT//\\u0026/$AMP}
   OUT=${OUT//\\u003d/=}
   OUT=${OUT//\\u002F/\/}
