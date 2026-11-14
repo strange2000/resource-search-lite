@@ -50,8 +50,7 @@ dl() {
 
 # JSON 压成一行，按 "},{" 切成一条对象一行
 flatten() {
-  { tr -d '\n\r' < "$1"; echo; } | sed 's/},{\}
-{/g'
+  { tr -d '\n\r' < "$1"; echo; } | sed 's/},{/}\n{/g'
 }
 
 echo "条目 $SID → 拉讨论帖列表…"
@@ -102,7 +101,7 @@ while IFS="$TAB" read -r tid tcnt; do
     # 归一：\n 当空格；各种"左斜杠"写法还原成 /
     norm=$(printf '%s' "$txt" | sed 's/\\n/ /g; s/\\r/ /g; s/左斜杠/\//g; s/右斜杠/\//g; s/正斜杠/\//g; s/反斜杠/\//g; s/斜杠/\//g; s/／/\//g')
     # 1) 完整链接
-    printf '%s\n' "$norm" | grep -oE 'https?:\/\/[^ "]+' | while IFS= read -r u; do
+    printf '%s\n' "$norm" | grep -oE 'https?://[^ "]+' | while IFS= read -r u; do
       printf '%s%s%s\n' "$tid" "$TAB" "$u" >> "$TMP/raw.tsv"
     done
     # 2) 模糊写法：「夸克 左斜杠s左斜杠 38d3d84a625a」→ 还原成 pan.quark.cn/s/38d3d84a625a
