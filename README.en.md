@@ -8,7 +8,7 @@
 
 Keyword in → pan share links / magnet links / HLS direct links out.
 
-[🇨 简体中文](README.zh-CN.md) · [🏠 Home](README.md)
+[🇨🇳 简体中文](README.zh-CN.md) · [🏠 Home](README.md)
 
 </div>
 
