@@ -19,6 +19,8 @@
 - ☁️ **9 类网盘**：夸克、百度、阿里云盘、UC、移动云盘、天翼、115、PikPak、迅雷、123 云盘
 - 🧲 **磁力带做种数**：knaben + apibay 两路并发，按做种数、体积、清晰度打分
 - 🎬 **直链**：14 个苹果CMS 采集接口，输出 `站点 / 标题 / m3u8 或 mp4`
+- 📡 **豆瓣首发**：按豆瓣条目 ID 扫讨论区回应，冷门新片也有机会
+- 🎞️ **m3u8 落盘**：直链拉成本地 `.ts`，多码率 / 相对路径 / fMP4 都能处理
 - 🌐 **单文件网页**：双击即用，中英双语，右上角一键切换
 - 🧮 **规则可改**：`scripts/rules.tsv` 一行一条正则，改完立即生效
 
@@ -48,6 +50,12 @@ bash scripts/all.sh "关键词"
 
 # 只要 m3u8 / mp4 直链
 bash scripts/collect.sh "关键词"
+
+# 豆瓣讨论区捞链接（参数是豆瓣条目 ID）
+bash scripts/社群首发.sh 37817151
+
+# 把 m3u8 拉成本地 .ts（先取 6 片验证）
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --名 片名 --片 6
 
 # 自检各源连通性
 bash scripts/find.sh --测
@@ -101,6 +109,34 @@ bash scripts/collect.sh "片名" --超时=8   # 单接口超时秒数（默认 1
 - 接口域名常换，死了不用改代码——往脚本顶部 `EP` 列表里加新的即可
 - 实测（2026-11-14）：`--探活` 活 7 / 死 7；「三体」27 条 / 6 个站 / 13 秒
 
+## 📡 社群首发（豆瓣讨论区）
+
+冷门新片在网盘聚合、磁力索引里常常全是 0 条，但首发链接往往就贴在豆瓣条目讨论区的回应里（《钥匙／鍵 2026》就是这么找到的）。`社群首发.sh` 走豆瓣 rexxar 接口，免登录：
+
+```bash
+bash scripts/社群首发.sh 37817151                    # 扫该条目全部讨论帖
+bash scripts/社群首发.sh 37817151 --topic 498744331  # 只扫指定帖
+bash scripts/社群首发.sh 37817151 --max 200          # 每帖最多 200 条回应（默认 100）
+bash scripts/社群首发.sh 37817151 --no-expand        # 不展开短链（省流量）
+```
+
+输出 TSV：`帖ID <TAB> 类型 <TAB> 链接`，类型 = 夸克 / 百度 / 115 / 磁力 / 短链 / 直链。
+
+参数是**豆瓣条目 ID**，不是片名。这类帖子里大量是「我有／多少米／私信」的付费引流，形如 `s/xxxxxxx` 的才是真链接；脚本会处理「左斜杠/斜杠」这类躲过滤写法，但**链接真伪仍要自己确认**。
+
+## 🎞️ m3u8 取流（落成本地 .ts）
+
+```bash
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --名 片名
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --片 6          # 只取前 6 片，先验能不能下
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --并发 4 --目录 ./out
+bash scripts/m3u8取流.sh ./local.m3u8 --名 test                # 也吃本地 m3u8
+```
+
+自动处理：master 多码率挑 `BANDWIDTH` 最大档、相对路径拼接、`EXT-X-MAP` 初始化段（fMP4）、失败重试 3 次。**拒绝** `METHOD=AES-128`（手机端没有 openssl），退出码 3。
+
+产物是 `.ts` 不是 mp4；要 mp4 在电脑上用 `ffmpeg -i x.ts -c copy -bsf:a aac_adtstoasc x.mp4`。全片可能上千片、几百 MB 到 1 GB+，别在流量环境跑。
+
 ## 🧮 打分规则
 
 `scripts/rules.tsv` 每行 `正则<TAB>分数<TAB>标记`，`grep -E` 匹配、大小写不敏感：
@@ -123,12 +159,14 @@ bash scripts/collect.sh "片名" --超时=8   # 单接口超时秒数（默认 1
 
 ```
 resource-search-lite/
-├── SKILL.md              Agent / 命令行说明（含前端 frontmatter）
+├── SKILL.md              Agent / 命令行说明（含 frontmatter）
 ├── config.json           实例、磁力源、打分规则的集中说明
 ├── scripts/
 │   ├── find.sh           网盘 + 磁力（主入口）
 │   ├── collect.sh        苹果CMS 直链（终端专用）
 │   ├── all.sh            三路并发
+│   ├── 社群首发.sh        豆瓣讨论区捞链接（参数是条目 ID）
+│   ├── m3u8取流.sh        m3u8 → 本地 .ts
 │   └── rules.tsv         打分规则
 └── web/
     ├── index.html        单文件网页（中英双语）
