@@ -76,6 +76,44 @@ sh scripts/collect.sh "片名" --超时=8    # 单接口超时秒数（默认 15
 - 接口域名常换，死了不用改代码，往脚本顶部 `EP` 列表里加新的。
 - 解析用 shell 内建字符串操作 + 先 `grep -F` 预筛，同一个「三体」从 4 分钟跑不完降到 13 秒。
 
+## 社群首发（豆瓣讨论区捞片源，2026-11-15）
+
+冷门新片在网盘聚合、磁力索引里常常全是 0 条，但首发链接就贴在豆瓣条目讨论区的回应里
+（《钥匙／鍵 2026》就是这么找到的）。走的是豆瓣 rexxar 接口，免登录。
+
+```bash
+sh scripts/社群首发.sh 37817151                    # 扫该条目全部讨论帖
+sh scripts/社群首发.sh 37817151 --topic 498744331  # 只扫指定帖
+sh scripts/社群首发.sh 37817151 --max 200          # 每帖最多 200 条回应（默认 100）
+sh scripts/社群首发.sh 37817151 --no-expand        # 不展开短链（省流量）
+```
+
+输出 TSV：`帖ID <TAB> 类型 <TAB> 链接`，类型 = 夸克/百度/115/磁力/短链/直链。
+参数是**豆瓣条目 ID**（不是片名）。实测：条目 37817151 → 1.6 秒，命中 1 条
+`https://pan.quark.cn/s/38d3d84a625a`。
+
+注意：这类帖子里大量是「我有／多少米／私信」的付费引流，形如 `s/xxxxxxx` 的才是真链接；
+脚本已处理「左斜杠/斜杠」这类躲过滤写法，但**链接真伪还得自己验**。
+
+## m3u8 取流（直链落成本地 .ts，2026-11-15）
+
+```bash
+sh scripts/m3u8取流.sh "https://…/index.m3u8" --名 钥匙2026
+sh scripts/m3u8取流.sh "https://…/index.m3u8" --片 6          # 只取前 6 片，先验能不能下
+sh scripts/m3u8取流.sh "https://…/index.m3u8" --并发 4 --目录 /sdcard/Download
+sh scripts/m3u8取流.sh ./local.m3u8 --名 test                # 也吃本地 m3u8
+```
+
+自动处理：master 多码率挑 `BANDWIDTH` 最大档、相对路径拼接、`EXT-X-MAP` 初始化段（fMP4）、失败重试 3 次。
+**拒绝** `METHOD=AES-128`（手机没有 openssl），退出码 3。
+
+实测（《钥匙》真链，`--片 6`）：13 秒，6 片 4,839,496 字节，首字节 `0x47`（TS 同步字节）。
+
+坑：
+- 产物是 `.ts` 不是 mp4（手机没 ffmpeg）；要 mp4 拷到电脑 `ffmpeg -i x.ts -c copy -bsf:a aac_adtstoasc x.mp4`。
+- 全片会有上千片、几百 MB 到 1 GB+，别在流量环境跑。
+- 脚本结束时清理 `seg_*.ts`；中途 Ctrl-C 退出若有残留，手动删掉即可。
+
 ## 打分
 
 `scripts/rules.tsv` 每行 `正则<TAB>分数<TAB>标记`，`grep -E`、大小写不敏感，与 `config.json` 的 20 条加分一一对应；再叠加做种（每 2 个 +1，上限 20）、新近（1 天 +20 / 7 天 +12 / 30 天 +5 / 一年以上 −10）、体积 < 150 MB −15。排除词命中直接跳过。
@@ -99,6 +137,8 @@ config.json              规则集中说明（实例、磁力源、加分项）
 scripts/all.sh           三路并发（网盘 + 磁力 + 直链），一条命令跑完
 scripts/find.sh          网盘 + 磁力（主入口）
 scripts/collect.sh       苹果CMS 站群直链（m3u8 / mp4），只在终端跑
+scripts/社群首发.sh       豆瓣讨论区捞网盘/磁力（参数是豆瓣条目 ID）
+scripts/m3u8取流.sh       m3u8 直链 → 本地 .ts（不支持 AES-128）
 scripts/rules.tsv        打分规则，改这里立即生效
 web/index.html           单文件网页版（静态托管或本地打开）
 web/assets/banner.svg    封面图
