@@ -8,12 +8,12 @@
 #   --条数 30             磁力最多列几条（默认 20）
 #   --网盘条数 10         每类网盘最多列几条（默认 10）
 #   --测                  自检各源连通性
-# 说明：原版 找资源.cjs 需要 Node，本机没有；这个脚本是等价 shell 实现。
+# 说明：纯 shell 实现，Android mksh / Linux bash 均可。
 
 set -u
 DIR=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || DIR=.
 RULES="$DIR/rules.tsv"
-UA="Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
+UA="Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
 INST="${RS_INSTANCE:-https://so.252035.xyz}"
 ALL_TYPES="quark,baidu,aliyun,uc,115,tianyi,xunlei,123,pikpak"
 NL=$'\n'
@@ -127,8 +127,8 @@ type_name() {
   esac
 }
 
-# ── 网盘：PanSou 实例 ───────────────────────────────────────────
-# 关键实测（2026-11）：结论被作者推翻并修正过两次，最终版是「不传 cloud_types」
+# ── 网盘：PanSou 实例 ──────────────────────────────────────
+# 关键实测（2026-11）：不传 cloud_types 结果最全
 #   · 必须带完整浏览器 UA + Referer，否则 403
 #   · 不传 cloud_types 结果最多（三体：传 10 类 21 条 vs 不传 209 条），且顺带带回 magnet/ed2k
 #   · 请求可能要 40–60 秒，失败时退回「按类型并发」兜底
@@ -155,8 +155,8 @@ pan_fetch() {
 
 # 合并结果：按 merged_by_type 里出现的类型动态打标记，再逐条抽字段
 pan_parse_merge() { # $1=json 文件 → $TMP/pan.tsv
-  sed "s/},{/}${NL}{/g" "$1" > "$TMP/merge.lines"
-  for t in $(grep -o '"[a-z0-9][a-z0-9_]*":\[{' "$1" | sed 's/":\[{$//; s/^"//' | sort -u); do
+  sed "s/},{$/}${NL}{/g" "$1" > "$TMP/merge.lines"
+  for t in $(grep -o '"[a-z0-9][a-z0-9_]*":\[{ ' "$1" | sed 's/":\[{$//; s/^"//' | sort -u); do
     sed "s/\"$t\":\[/${NL}@$t@/g" "$TMP/merge.lines" > "$TMP/merge.lines2" && mv "$TMP/merge.lines2" "$TMP/merge.lines"
   done
   : > "$TMP/pan.tsv"
@@ -180,7 +180,7 @@ pan_one() { # $1=类型
   : > "$TMP/pan_$1.tsv"
   pan_fetch "$1" > "$TMP/pan_$1.json"
   grep -q '"code":0' "$TMP/pan_$1.json" 2>/dev/null || return 0
-  sed "s/},{/}${NL}{/g" "$TMP/pan_$1.json" > "$TMP/pan_$1.lines"
+  sed "s/},{$/}${NL}{/g" "$TMP/pan_$1.json" > "$TMP/pan_$1.lines"
   while IFS= read -r ln; do
     case "$ln" in *'"url":"'*) : ;; *) continue ;; esac
     val "$ln" url; [ -n "$OUT" ] || continue; unesc "$OUT"; u=$OUT
@@ -217,7 +217,7 @@ do_pansou() {
   fi
 }
 
-# ── 磁力：knaben / apibay ───────────────────────────────────────
+# ── 磁力：knaben / apibay ──────────────────────────────────
 do_magnets() {
   : > "$TMP/mag.tsv"
   limit=$((TOP * 3)); [ "$limit" -lt 30 ] && limit=30
@@ -232,7 +232,7 @@ do_magnets() {
   wait
 
   if [ -s "$TMP/knaben.json" ]; then
-    sed "s/},{/}${NL}{/g" "$TMP/knaben.json" > "$TMP/knaben.lines"
+    sed "s/},{$/}${NL}{/g" "$TMP/knaben.json" > "$TMP/knaben.lines"
     while IFS= read -r ln; do
       case "$ln" in *'"hash":"'*) : ;; *) continue ;; esac
       val "$ln" title; t=$OUT
@@ -249,7 +249,7 @@ do_magnets() {
   fi
 
   if [ -s "$TMP/apibay.json" ]; then
-    sed "s/},{/}${NL}{/g" "$TMP/apibay.json" > "$TMP/apibay.lines"
+    sed "s/},{$/}${NL}{/g" "$TMP/apibay.json" > "$TMP/apibay.lines"
     while IFS= read -r ln; do
       case "$ln" in *'"info_hash":"'*) : ;; *) continue ;; esac
       val "$ln" name; t=$OUT; val "$ln" info_hash; h=$OUT
@@ -332,7 +332,7 @@ score_all() {
   sort -rn "$TMP/scored" > "$TMP/sorted"
 }
 
-# ── 自检 ────────────────────────────────────────────────────────
+# ── 自检 ──────────────────────────────────────────────────
 if [ "$SELFTEST" = "1" ]; then
   echo "== 自检 =="
   HAS_KW=0; [ -n "$KW" ] && HAS_KW=1
@@ -359,7 +359,7 @@ fi
 
 [ -n "$KW" ] || { sed -n '2,12p' "$0"; exit 2; }
 
-# ── 抓取 ────────────────────────────────────────────────────────
+# ── 抓取 ──────────────────────────────────────────────────
 if [ "$MAG_ONLY" = "0" ]; then do_pansou; else : > "$TMP/pan.tsv"; fi
 do_magnets
 score_all
@@ -374,7 +374,7 @@ if [ -s "$TMP/pan.tsv" ]; then
 fi
 count_type() { cut -f1 "$TMP/pan.tsv" 2>/dev/null | grep -c "^$1$"; }
 
-# ── 输出 ────────────────────────────────────────────────────────
+# ── 输出 ──────────────────────────────────────────────────
 if [ "$MODE" = "json" ]; then
   printf '{"关键词":"%s","网盘":{' "$(jstr "$KW")"
   first=1
