@@ -8,7 +8,7 @@
 
 Keyword in → pan share links / magnet links / HLS direct links out.
 
-[🇨🇳 简体中文](README.zh-CN.md) · [🏠 Home](README.md)
+[🇨 简体中文](README.zh-CN.md) · [🏠 Home](README.md)
 
 </div>
 
@@ -19,6 +19,8 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 - ☁️ **9 pan providers** — Quark, Baidu, Aliyun, UC, China Mobile, Tianyi, 115, PikPak, Xunlei, 123 Pan.
 - 🧲 **Magnets with seeder counts** — knaben + apibay queried in parallel, ranked by seeders, size and quality.
 - 🎬 **Direct links** — 14 Apple CMS scraper endpoints; outputs `site / title / m3u8 or mp4`.
+- 📡 **Douban first-run links** — scan a movie's discussion threads by Douban subject ID.
+- 🎞️ **m3u8 to disk** — pull an HLS stream into local `.ts` files; handles multi-bitrate, relative paths and fMP4.
 - 🌐 **One-file web page** — open it and go, bilingual UI with a `中文 / EN` switch.
 - 🧮 **Editable rules** — one regex per line in `scripts/rules.tsv`, effective immediately.
 
@@ -48,6 +50,12 @@ bash scripts/all.sh "keyword"
 
 # HLS links only
 bash scripts/collect.sh "keyword"
+
+# Douban discussion threads (argument is a subject ID)
+bash scripts/社群首发.sh 37817151
+
+# pull an m3u8 into local .ts (grab 6 segments first)
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --名 title --片 6
 
 # connectivity self-test
 bash scripts/find.sh --测
@@ -113,6 +121,34 @@ Known quirks:
 - Endpoint domains change often. No code change needed — append the new one to the `EP` list at the top of the script.
 - Measured on 2026-11-14: `--探活` → 7 alive / 7 dead; “三体” → 27 rows from 6 sites in 13 s.
 
+## 📡 Douban discussion threads
+
+New or obscure titles are often missing from every pan index and magnet tracker, yet the first-run link is sitting in a Douban discussion thread (that is how 《钥匙 / 鍵 2026》 was found). `社群首发.sh` uses Douban's public rexxar API — no login:
+
+```bash
+bash scripts/社群首发.sh 37817151                    # scan every thread of the subject
+bash scripts/社群首发.sh 37817151 --topic 498744331  # scan one thread only
+bash scripts/社群首发.sh 37817151 --max 200          # up to 200 replies per thread (default 100)
+bash scripts/社群首发.sh 37817151 --no-expand        # do not expand short links
+```
+
+Output TSV: `thread-id <TAB> type <TAB> link`, where type is Quark / Baidu / 115 / magnet / short / direct.
+
+The argument is a **Douban subject ID**, not a title. Many replies are paid funnels ("DM me", "how much"), so only `s/xxxxxxx`-shaped links are real. The script also handles look-alike evasions such as "left slash"; always verify a link yourself.
+
+## 🎞️ m3u8 to local .ts
+
+```bash
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --名 title
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --片 6          # first 6 segments, quick check
+bash scripts/m3u8取流.sh "https://…/index.m3u8" --并发 4 --目录 ./out
+bash scripts/m3u8取流.sh ./local.m3u8 --名 test                # local playlists work too
+```
+
+It handles master playlists (picks the highest `BANDWIDTH`), relative URLs, `EXT-X-MAP` init segments (fMP4) and retries each segment up to 3 times. It **refuses** `METHOD=AES-128` (no openssl on the phone) and exits with code 3.
+
+Output is `.ts`, not mp4. To remux on a computer: `ffmpeg -i x.ts -c copy -bsf:a aac_adtstoasc x.mp4`. A full movie can be thousands of segments and hundreds of MB — avoid doing it on mobile data.
+
 ## 🧮 Scoring
 
 `scripts/rules.tsv` is `regex<TAB>points<TAB>label` per line, matched with `grep -E`, case-insensitive:
@@ -141,6 +177,8 @@ resource-search-lite/
 │   ├── find.sh            Pan + magnets (main entry)
 │   ├── collect.sh         Apple CMS direct links (terminal only)
 │   ├── all.sh             All three lanes at once
+│   ├── 社群首发.sh         Douban threads (argument is a subject ID)
+│   ├── m3u8取流.sh        m3u8 → local .ts
 │   └── rules.tsv          Scoring rules
 └── web/
     ├── index.html         Single-file web page (bilingual)
