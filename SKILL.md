@@ -1,13 +1,13 @@
 ---
 name: resource-search-lite
-description: 资源检索（零依赖）。按关键词搜网盘分享链接（夸克/百度/阿里云/UC/115/天翼/迅雷/123/PikPak）、直连磁力索引拿磁力链（带做种数、体积），并能查 14 个苹果CMS 采集接口拿 m3u8/mp4 直链，按规则打分排序，输出可直接复制的链接。纯 shell + curl，不需要 Node、alist、网盘登录态，只搜不存。
+description: 资源检索（零依赖）。按关键词搜网盘分享链接（夸克/百度/阿里云/UC/115/天翼/迅雷/123/PikPak）、直连磁力索引拿磁力链（带做种数、体积），并能查 14 个苹果CMS 采集接口拿 m3u8/mp4 直链，按规则打分排序，输出可直接复制的链接。纯 shell + curl，不需要 Node、alist、网盘登录态，只搜不存。 / Zero-dependency resource finder: pan share links, magnets with seeders, HLS direct links. Shell + curl only.
 ---
 
-# 找资源（lite）
+# 资源搜索 Lite
 
 关键词 → **网盘分享链接** + **磁力链** + **m3u8/mp4 直链**。只搜不存，不碰任何账号。
 
-这是电脑版 `resource-search` 的 lite 分支：原版用 Node 跑 `.cjs`，并调用夸克官方 skill 与 alist 里的 115 做「转存 / 云下载」。这里把「存入」整段摘掉，只负责把链接找出来，所以运行时只剩 shell + curl。
+只用 `curl` 和一个 POSIX shell，不需要 Node、Python、数据库，也不挂 alist。
 
 ## 什么时候用
 
@@ -17,7 +17,7 @@ description: 资源检索（零依赖）。按关键词搜网盘分享链接（�
 
 ## 命令
 
-Android / Eta 用 `sh`，Linux / macOS / Git Bash 把 `sh` 换成 `bash`：
+Android / BusyBox 用 `sh`，Linux / macOS / Git Bash 把 `sh` 换成 `bash`：
 
 ```bash
 sh scripts/all.sh "关键词"                      # 三路一起跑：网盘 + 磁力 + 直链（并发，约 30–60 秒）
@@ -44,7 +44,7 @@ RS_INSTANCE=https://a.example.com,https://b.example.com sh scripts/find.sh "关�
 
 优先级 `RS_INSTANCE` → 脚本内置默认。拉不到结果时先怀疑实例，隔 30–60 秒重跑，别急着改代码。
 
-## 取数规则（两端对齐后的最终结论）
+## 取数规则
 
 - 网盘：发**一次** `res=merge` 请求，**不带 `cloud_types`**。实测不传比传满 9/10 类多 10 倍以上（三体：不传 209 条 / 54s；传 10 类 21 条 / 65s；只传 quark 5 条）。类型过滤在本地按 `merged_by_type` 的 key 做。请求失败才退回「按类型并发」兜底。
 - 请求必须带完整浏览器 UA + `Referer`，否则实例直接 403。
@@ -74,11 +74,15 @@ sh scripts/collect.sh "片名" --超时=8    # 单接口超时秒数（默认 15
 - 安卓 Chrome **不认 m3u8**，直接点开播不了。要么丢给 VLC / nPlayer / MX，要么用 ffmpeg 转 mp4。
 - 个别站把中文转成 `\uXXXX`，这种条目标题是转义码，但链接能用。
 - 接口域名常换，死了不用改代码，往脚本顶部 `EP` 列表里加新的。
-- 解析用 mksh 内建字符串操作 + 先 `grep -F` 预筛，同一个「三体」从 4 分钟跑不完降到 13 秒。
+- 解析用 shell 内建字符串操作 + 先 `grep -F` 预筛，同一个「三体」从 4 分钟跑不完降到 13 秒。
 
 ## 打分
 
 `scripts/rules.tsv` 每行 `正则<TAB>分数<TAB>标记`，`grep -E`、大小写不敏感，与 `config.json` 的 20 条加分一一对应；再叠加做种（每 2 个 +1，上限 20）、新近（1 天 +20 / 7 天 +12 / 30 天 +5 / 一年以上 −10）、体积 < 150 MB −15。排除词命中直接跳过。
+
+## 网页版
+
+`web/index.html` 是独立的单文件页面，与命令行互不依赖：网盘 + 磁力（同一实例的 magnet 通道），中英双语，右上角切换。采集接口没有 CORS，网页拿不到，只能用 `collect.sh`。
 
 ## 已知限制
 
@@ -91,12 +95,11 @@ sh scripts/collect.sh "片名" --超时=8    # 单接口超时秒数（默认 15
 
 ```
 SKILL.md                 本文件
-config.json              规则集中说明（实例、磁力源、加分项），留作对照
+config.json              规则集中说明（实例、磁力源、加分项）
 scripts/all.sh           三路并发（网盘 + 磁力 + 直链），一条命令跑完
 scripts/find.sh          网盘 + 磁力（主入口）
 scripts/collect.sh       苹果CMS 站群直链（m3u8 / mp4），只在终端跑
 scripts/rules.tsv        打分规则，改这里立即生效
 web/index.html           单文件网页版（静态托管或本地打开）
+web/assets/banner.svg    封面图
 ```
-
-同一份逻辑不留两种实现，所以这里没有 `.cjs`。电脑版带转存的 skill 与本次 lite 各自维护、互不覆盖。
