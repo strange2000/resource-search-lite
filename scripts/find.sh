@@ -155,7 +155,7 @@ pan_fetch() {
 
 # 合并结果：按 merged_by_type 里出现的类型动态打标记，再逐条抽字段
 pan_parse_merge() { # $1=json 文件 → $TMP/pan.tsv
-  sed "s/},{/}${NL}{/g" "$1" > "$TMP/merge.lines"
+  sed "s/},{/}\n{/g" "$1" > "$TMP/merge.lines"
   for t in $(grep -o '"[a-z0-9][a-z0-9_]*":\[{' "$1" | sed 's/":\[{$//; s/^"//' | sort -u); do
     sed "s/\"$t\":\[/${NL}@$t@/g" "$TMP/merge.lines" > "$TMP/merge.lines2" && mv "$TMP/merge.lines2" "$TMP/merge.lines"
   done
@@ -180,7 +180,7 @@ pan_one() { # $1=类型
   : > "$TMP/pan_$1.tsv"
   pan_fetch "$1" > "$TMP/pan_$1.json"
   grep -q '"code":0' "$TMP/pan_$1.json" 2>/dev/null || return 0
-  sed "s/},{/}${NL}{/g" "$TMP/pan_$1.json" > "$TMP/pan_$1.lines"
+  sed "s/},{/}\n{/g" "$TMP/pan_$1.json" > "$TMP/pan_$1.lines"
   while IFS= read -r ln; do
     case "$ln" in *'"url":"'*) : ;; *) continue ;; esac
     val "$ln" url; [ -n "$OUT" ] || continue; unesc "$OUT"; u=$OUT
@@ -232,7 +232,7 @@ do_magnets() {
   wait
 
   if [ -s "$TMP/knaben.json" ]; then
-    sed "s/},{/}${NL}{/g" "$TMP/knaben.json" > "$TMP/knaben.lines"
+    sed "s/},{/}\n{/g" "$TMP/knaben.json" > "$TMP/knaben.lines"
     while IFS= read -r ln; do
       case "$ln" in *'"hash":"'*) : ;; *) continue ;; esac
       val "$ln" title; t=$OUT
@@ -249,7 +249,7 @@ do_magnets() {
   fi
 
   if [ -s "$TMP/apibay.json" ]; then
-    sed "s/},{/}${NL}{/g" "$TMP/apibay.json" > "$TMP/apibay.lines"
+    sed "s/},{/}\n{/g" "$TMP/apibay.json" > "$TMP/apibay.lines"
     while IFS= read -r ln; do
       case "$ln" in *'"info_hash":"'*) : ;; *) continue ;; esac
       val "$ln" name; t=$OUT; val "$ln" info_hash; h=$OUT
