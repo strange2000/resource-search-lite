@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-label="Resource Finder Lite banner">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1115"/>
+      <stop offset="0.55" stop-color="#141a26"/>
+      <stop offset="1" stop-color="#1d2740"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4f8cff"/>
+      <stop offset="1" stop-color="#3ecf8e"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="420" fill="url(#bg)"/>
+  <circle cx="1040" cy="70" r="150" fill="#4f8cff" opacity="0.10"/>
+  <circle cx="1120" cy="360" r="180" fill="#3ecf8e" opacity="0.08"/>
+
+  <g font-family="-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif">
+    <text x="72" y="128" fill="#cfe0ff" font-size="24" letter-spacing="6">RESOURCE FINDER</text>
+    <text x="72" y="214" fill="#ffffff" font-size="72" font-weight="700">Resource Finder Lite</text>
+    <text x="74" y="268" fill="#9aa6bd" font-size="28">零依赖资源检索 · 网盘 / 磁力 / 直链</text>
+    <text x="74" y="304" fill="#6d7890" font-size="22">Pan links · Magnets · HLS — pure shell + curl</text>
+
+    <g font-size="21">
+      <rect x="74" y="332" width="150" height="46" rx="23" fill="#4f8cff" opacity="0.16" stroke="#4f8cff" stroke-opacity="0.55"/>
+      <text x="149" y="362" fill="#cfe0ff" text-anchor="middle">☁️ 9 网盘</text>
+
+      <rect x="240" y="332" width="150" height="46" rx="23" fill="#3ecf8e" opacity="0.14" stroke="#3ecf8e" stroke-opacity="0.5"/>
+      <text x="315" y="362" fill="#bff0db" text-anchor="middle">🧲 磁力</text>
+
+      <rect x="406" y="332" width="176" height="46" rx="23" fill="#c9a227" opacity="0.14" stroke="#c9a227" stroke-opacity="0.5"/>
+      <text x="494" y="362" fill="#f0e0a8" text-anchor="middle">🎬 m3u8 直链</text>
+    </g>
+
+    <g transform="translate(786,120)">
+      <rect x="0" y="0" width="348" height="212" rx="18" fill="#0b0e14" stroke="#2a3446"/>
+      <rect x="0" y="0" width="348" height="38" rx="18" fill="#151b26"/>
+      <circle cx="26" cy="19" r="6" fill="#ff5f57"/>
+      <circle cx="48" cy="19" r="6" fill="#febc2e"/>
+      <circle cx="70" cy="19" r="6" fill="#28c840"/>
+      <text x="24" y="86" fill="#3ecf8e" font-size="19" font-family="ui-monospace,Menlo,Consolas,monospace">$ sh scripts/find.sh \</text>
+      <text x="24" y="116" fill="#cfe0ff" font-size="19" font-family="ui-monospace,Menlo,Consolas,monospace">    "keyword"</text>
+      <text x="24" y="158" fill="#8b93a7" font-size="17" font-family="ui-monospace,Menlo,Consolas,monospace">【磁力】3 条</text>
+      <text x="24" y="186" fill="#f0e0a8" font-size="15" font-family="ui-monospace,Menlo,Consolas,monospace">74分 做种3 4.7G …</text>
+    </g>
+
+    <rect x="72" y="398" width="1056" height="2" fill="url(#accent)" opacity="0.5"/>
+  </g>
+</svg>
