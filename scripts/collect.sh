@@ -8,7 +8,7 @@
 #   sh scripts/collect.sh "片名" --超时=8       单接口超时秒数（默认 15）
 # 输出：每行  站点 <TAB> 标题 <TAB> 直链（m3u8 优先；没有 m3u8 就给第一个 http 地址）
 #
-# 与作者原版的差别：解析改成 mksh 内建字符串操作，不再每条记录 fork 四趟 sed/grep。
+# 实现说明：解析用 shell 内建字符串操作，不再每条记录 fork 四趟 sed/grep。
 # 实测「三体」从 4 分钟还没跑完 → 十几秒。
 set -u
 
