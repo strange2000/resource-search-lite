@@ -95,8 +95,8 @@ for ep in $EP; do
   f="$TMPD/$i.json"
   [ -s "$f" ] || continue
   SITE=$(site_of "$ep")
-  # 只 fork 两次：去换行并补一个（否则 while read 漏最后一条）+ 按 '},{' 切条目
-  { tr -d '\n\r' < "$f"; echo; } | sed 's/},{/}\n{/g' > "$TMPD/$i.lines"
+  # 一次 sed 搞定：切条目 + 还原 JSON 的 \/ 转义（放在这里就不用在循环里逐条 fork）
+  { tr -d '\n\r' < "$f"; echo; } | sed 's#\\/#/#g; s/},{/}\n{/g' > "$TMPD/$i.lines"
 
   if [ "$WIDE" = "0" ]; then
     grep -F -e "$KW" "$TMPD/$i.lines" > "$TMPD/$i.hit" 2>/dev/null
@@ -106,8 +106,6 @@ for ep in $EP; do
   n=0
   while IFS= read -r line; do
     [ "$n" -ge "$LIMIT" ] && break
-    # 还原 JSON 里的 \/ 转义
-    line=${line//\\\//\/}
     # 抽 vod_name（纯内建，不 fork）
     case "$line" in
       *'"vod_name":"'*) : ;;
