@@ -99,6 +99,7 @@ RS_INSTANCE=https://a.example.com,https://b.example.com bash scripts/find.sh "�
 - 实例：`index.html?instance=https://your-pansou.example.com`，多台用逗号
 - 语言：右上角 `中文 / EN`；也可用 `?lang=zh` / `?lang=en`，选择会记在本地
 - 亮 / 暗主题、搜索历史、类型筛选、直链播放、失败重试
+- 每次查询都记源状态：状态栏显示「源 N/M 通」，空结果分三种说法 —— **全源正常但没有** / **部分源没连上（可能漏结果）** / **一个源都没连上（不是没有资源）**，并把失败的源和原因（超时 / HTTP 码）列出来
 
 网页版能直接出磁力，是因为走同一实例的 `magnet` 通道（该实例开了 CORS）。代价是**只有标题 + 磁力链，没有做种数和体积**；要带做种数的完整清单请用命令行版。
 
