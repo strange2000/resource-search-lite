@@ -154,7 +154,7 @@ while IFS= read -r line; do
 done < "$TMP/media.m3u8"
 
 CNT=$(wc -l < "$TMP/segs.txt" | tr -d ' ')
-echo "· 准备下载 $CNT 片（并发 $CONC）"
+echo "· 准备下载 $CNT 片（并发 ${CONC}）"
 
 done_n=0
 while IFS="$(printf '\t')" read -r idx full; do
