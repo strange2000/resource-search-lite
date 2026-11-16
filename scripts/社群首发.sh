@@ -85,7 +85,7 @@ echo "· 待扫 $(wc -l < "$TMP/topics.list" | tr -d ' ') 个帖"
 : > "$TMP/raw.tsv"
 
 while IFS="$TAB" read -r tid tcnt; do
-  echo "  → 帖 $tid（$tcnt 条回应）"
+  echo "  → 帖 ${tid}（$tcnt 条回应）"
   dl "$API/group/topic/$tid/comments?count=$MAXC&start=0" > "$TMP/c.json"
   if [ ! -s "$TMP/c.json" ]; then
     echo "    ✗ 回应接口没返回（帖被删或需登录）"
