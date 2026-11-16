@@ -91,6 +91,21 @@ The CLI flags are intentionally Chinese (`--磁力`, `--只链接` …) because 
 
 On Android, BusyBox or a router, use `sh` instead of `bash`.
 
+## 🚦 Exit codes (for scripting)
+
+```
+0  Hit          at least one of pan / magnet / direct-link returned something
+3  Up, no hit   the instance and the endpoints answered — this title genuinely isn't there
+1  Unreachable  neither the pan instance nor the magnet indexes responded (blocked / offline / all timed out)
+2  Bad argument  find.sh got an unknown flag
+```
+
+`all.sh` folds them: a single-lane run passes that lane's code straight through; in dual-lane mode **any lane at 0 → 0**, **both lanes at 3 → 3**, anything else → 1.
+
+Why zero results are not "success" — **"it isn't out there" and "the search never ran" are two different things to a caller**: the first means try another title or source, the second means wait 30–60 s and retry, or switch instances. Returning 0 disguises the second as the first.
+
+> ⚠️ The table above covers `find.sh` / `collect.sh` / `all.sh` only. In `m3u8取流.sh` a `3` means "refused an AES-128 stream"; in `字幕.sh` it means "the search page never loaded". Each has its own code range — see `SKILL.md`.
+
 ## ⚙️ Configure the search instance
 
 Pan search uses a public [PanSou](https://github.com/fish2018/pansou) instance. **Public instances get rate-limited** — 403, Cloudflare 400 and 60-second stalls are all normal. Use your own:
@@ -234,10 +249,7 @@ resource-search-lite/
 
 - Public instances are flaky: wait 30–60 s or use your own instance
 - mksh arithmetic is 32-bit; sizes above 2 GB are approximated, roughly ±0.1 G
-- International magnet indexes ignore CJK text: `apibay` is essentially useless for Chinese queries
-  (searching 「三体」 returns *The Odyssey* and *Spider-Man*), so `knaben` / `apibay` / `nyaa` all pass through a
-  local relevance gate (2-character sliding window for CJK). **Better fewer than wrong** — sparse magnet results
-  on a Chinese title usually means the gate dropped them, not that nothing exists
+- International magnet indexes ignore CJK text — try the Chinese title first
 - Pan search only: no transfer, no saving, no account access
 
 ## ⚖️ Disclaimer
