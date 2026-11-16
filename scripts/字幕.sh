@@ -120,7 +120,7 @@ href="/d/#g' | grep 'href="/d/' | head -n 10 > "$TMP/cards.txt"
          -H "referer: $BASE/search/$enc" "$BASE$dpath" -o "$TMP/d.html" 2>/dev/null || true
     [ -s "$TMP/d.html" ] || continue
     grep -oE 'href="/a/[0-9A-Za-z]{4,12}"[^>]*>[^<]{1,80}' "$TMP/d.html" \
-      | sed 's#href="/a/##; s/"[^>]*>/\t/' >> "$TMP/items.tsv"
+      | sed 's#href="/a/##; s/"[^>]*>/	/' >> "$TMP/items.tsv"
   done < "$TMP/d.txt"
 
   if [ ! -s "$TMP/items.tsv" ]; then
