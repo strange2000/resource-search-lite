@@ -22,6 +22,7 @@
 - 🎬 **直链**：14 个苹果CMS 采集接口，输出 `站点 / 标题 / m3u8 或 mp4`
 - 📡 **豆瓣首发**：按豆瓣条目 ID 扫讨论区回应，冷门新片也有机会
 - 🎞️ **m3u8 落盘**：直链拉成本地 `.ts`，多码率 / 相对路径 / fMP4 都能处理
+- 📝 **字幕**：subhd 字幕转标准 SRT，`--预览 <sid>` 最稳
 - 🌐 **单文件网页**：双击即用，中英双语，右上角一键切换
 - 🧮 **规则可改**：`scripts/rules.tsv` 一行一条正则，改完立即生效
 
@@ -68,6 +69,9 @@ bash scripts/社群首发.sh 37817151
 
 # 把 m3u8 拉成本地 .ts（先取 6 片验证）
 bash scripts/m3u8取流.sh "https://…/index.m3u8" --名 片名 --片 6
+
+# 取字幕并转成 SRT（用 sid 最稳）
+bash scripts/字幕.sh --预览 rvMUEC
 
 # 自检各源连通性
 bash scripts/find.sh --测
@@ -149,6 +153,24 @@ bash scripts/m3u8取流.sh ./local.m3u8 --名 test                # 也吃本地
 
 产物是 `.ts` 不是 mp4；要 mp4 在电脑上用 `ffmpeg -i x.ts -c copy -bsf:a aac_adtstoasc x.mp4`。全片可能上千片、几百 MB 到 1 GB+，别在流量环境跑。
 
+## 📝 字幕（subhd → SRT）
+
+`scripts/字幕.sh` 从 subhd 取中文字幕，按规则转成标准 SRT：
+
+```bash
+bash scripts/字幕.sh --预览 rvMUEC                  # 用 sid 直取（最稳）
+bash scripts/字幕.sh "真实 2017" --取 1 --页面 1     # 关键词搜索（实验性）
+bash scripts/字幕.sh --预览 rvMUEC --目录 ./subs     # 指定输出目录
+```
+
+时间轴：起点取 `[HH:MM:SS]`，终点取下一块起点 − 0.15 s（上限 +7 s），不足 0.4 s 补到 1.2 s，末条 +3 s，毫秒补零到 3 位。实测一条 sid 494 条字幕，输出约 30 KB。
+
+已知限制：
+
+- subhd 三个域国内都能打开，但**单请求 9–30 秒**，偶发静默超时；脚本会换域重试
+- **关键词搜索不稳**：站点结构是 `搜索 → /d/<id> → /a/<sid>`，搜索结果页混着大量推荐位链接，脚本按片名匹配失败会报错列候选，不会乱抓；稳妥用 `--预览 <sid>`
+- 没有 ffprobe，`--视频` 的时间轴对齐做不到；`--到115` 不支持
+
 ## 🧮 打分规则
 
 `scripts/rules.tsv` 每行 `正则<TAB>分数<TAB>标记`，`grep -E` 匹配、大小写不敏感：
@@ -179,10 +201,13 @@ resource-search-lite/
 │   ├── all.sh            三路并发
 │   ├── 社群首发.sh        豆瓣讨论区捞链接（参数是条目 ID）
 │   ├── m3u8取流.sh        m3u8 → 本地 .ts
+│   ├── 字幕.sh            subhd 字幕 → SRT（--预览 <sid> 最稳）
 │   └── rules.tsv         打分规则
 └── web/
     ├── index.html        单文件网页（中英双语）
-    └── assets/banner.svg 封面图
+    └── assets/
+        ├── banner.svg    封面图
+        └── social-preview.png 社交预览图
 ```
 
 ## 🛡️ 隐私
