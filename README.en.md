@@ -111,6 +111,7 @@ Priority: `RS_INSTANCE` → built-in default. `config.json` is a centralized des
 - Instance: `index.html?instance=https://your-pansou.example.com`, comma-separate for several
 - Language: `中文 / EN` in the top-right corner, or `?lang=zh` / `?lang=en`; the choice is remembered
 - Light / dark theme, search history, provider filters, inline HLS player, retry
+- Every query records per-source state: the status line shows "sources N/M up", and an empty result says which of three cases it is — **all sources answered, nothing there** / **some sources failed (results may be missing)** / **no source answered at all (not "no such resource")** — listing the failed hosts and why (timeout / HTTP status)
 
 Magnets work in the browser because they come from the same instance's `magnet` channel (CORS enabled). The trade-off: **title + magnet only, no seeders or size**. For the full ranked list, use the CLI.
 
