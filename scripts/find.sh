@@ -196,6 +196,7 @@ do_pansou() {
   [ -n "$KW" ] || return 0
   # 不传 cloud_types 结果最多；显式 --类型 时才按用户要求过滤
   types_csv=${CTYPE:-}
+  PAN_OK=0
   : > "$TMP/pan.tsv"
   pan_fetch "$types_csv" > "$TMP/pan.json"
   if ! grep -q '"code":0' "$TMP/pan.json" 2>/dev/null; then
@@ -203,7 +204,7 @@ do_pansou() {
     pan_fetch "$types_csv" > "$TMP/pan.json"
   fi
   if grep -q '"code":0' "$TMP/pan.json" 2>/dev/null && grep -q 'merged_by_type' "$TMP/pan.json" 2>/dev/null; then
-    pan_parse_merge "$TMP/pan.json"
+    PAN_OK=1; pan_parse_merge "$TMP/pan.json"
   else
     # 兜底：按类型并发（20 秒一个，谁先回算谁）
     for t in $(printf '%s' "${CTYPE:-$ALL_TYPES}" | tr ',' ' '); do pan_one "$t" & done
@@ -447,7 +448,16 @@ else
   echo "【磁力】0 条"
 fi
 
-if [ ! -s "$TMP/pan.tsv" ] && [ ! -s "$TMP/sorted" ]; then
-  echo
-  echo "什么都没搜到。公开源偶发空结果，隔 30–60 秒重跑一次；中文片名优先；国际索引对中日韩文很弱。"
+if [ -s "$TMP/pan.tsv" ] || [ -s "$TMP/sorted" ]; then
+  exit 0                       # 0 = 有结果
 fi
+
+echo
+echo "什么都没搜到。公开源偶发空结果，隔 30–60 秒重跑一次；中文片名优先；国际索引对中日韩文很弱。"
+
+MAG_OK=0
+if [ -s "$TMP/knaben.json" ] || [ -s "$TMP/apibay.json" ]; then MAG_OK=1; fi
+if [ "${PAN_OK:-0}" = "1" ] || [ "$MAG_OK" = "1" ]; then
+  exit 3                       # 3 = 连得通，但确实没货
+fi
+exit 1                         # 1 = 两路都没连上（网络/风控）
