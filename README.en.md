@@ -234,7 +234,10 @@ resource-search-lite/
 
 - Public instances are flaky: wait 30–60 s or use your own instance
 - mksh arithmetic is 32-bit; sizes above 2 GB are approximated, roughly ±0.1 G
-- International magnet indexes ignore CJK text — try the Chinese title first
+- International magnet indexes ignore CJK text: `apibay` is essentially useless for Chinese queries
+  (searching 「三体」 returns *The Odyssey* and *Spider-Man*), so `knaben` / `apibay` / `nyaa` all pass through a
+  local relevance gate (2-character sliding window for CJK). **Better fewer than wrong** — sparse magnet results
+  on a Chinese title usually means the gate dropped them, not that nothing exists
 - Pan search only: no transfer, no saving, no account access
 
 ## ⚖️ Disclaimer
