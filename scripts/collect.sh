@@ -77,7 +77,7 @@ if [ "$PROBE" = "1" ]; then
       printf '死  %-40s %s B\n' "$(site_of "$ep")" "$SIZE"; DEAD=$((DEAD+1))
     fi
   done
-  echo "—— 接口池 $((ALIVE+DEAD)) 个，活 $ALIVE / 死 $DEAD（死的不代表永久废，域名常换）"
+  echo "—— 接口池 $((ALIVE+DEAD)) 个，活 $ALIVE / 死 ${DEAD}（死的不代表永久废，域名常换）"
   exit 0
 fi
 
@@ -146,13 +146,13 @@ if [ -s "$TMPD/out.tsv" ]; then
   sort -u "$TMPD/out.tsv" > "$TMPD/out2.tsv" 2>/dev/null || cp "$TMPD/out.tsv" "$TMPD/out2.tsv"
   ROWS=$(wc -l < "$TMPD/out2.tsv" | tr -d ' ')
   SITES=$(cut -f1 "$TMPD/out2.tsv" | sort -u | wc -l | tr -d ' ')
-  echo "== 「$KW」采集接口命中 $ROWS 条（来自 $SITES 个站，每站最多 $LIMIT 条）=="
+  echo "== 「${KW}」采集接口命中 $ROWS 条（来自 $SITES 个站，每站最多 $LIMIT 条）=="
   cat "$TMPD/out2.tsv"
   echo
   echo "—— 下一步：把直链粘进「找资源」页的「播放 / 下载直链」直接看；"
   echo "   要下载成 mp4 用 ffmpeg，或直接丢给 VLC / nPlayer / MX 播放。"
 else
-  echo "== 「$KW」采集接口 0 条 =="
+  echo "== 「${KW}」采集接口 0 条 =="
   echo "先确认接口今天活着：sh scripts/collect.sh --探活"
   echo "活着但还是 0 条，说明这几个站没有该片；换正式片名再试，或加 --宽 看未过滤结果。"
 fi
