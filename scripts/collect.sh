@@ -156,3 +156,8 @@ else
   echo "先确认接口今天活着：sh scripts/collect.sh --探活"
   echo "活着但还是 0 条，说明这几个站没有该片；换正式片名再试，或加 --宽 看未过滤结果。"
 fi
+
+# 退出码：0 有结果 / 3 零结果（接口通但没货）/ 1 全挂（14 个接口都没返回数据）
+if [ -s "$TMPD/out.tsv" ]; then exit 0; fi
+if grep -q '"list"' "$TMPD"/*.json 2>/dev/null; then exit 3; fi
+exit 1
