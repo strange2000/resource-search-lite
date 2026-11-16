@@ -82,14 +82,20 @@ if [ "$ONLY" != "p" ]; then
 fi
 
 echo
-# 单路模式：把自己那路的 rc 传出去；两路模式：两路都失败才算失败
+# 退出码约定：0 有结果 / 3 零结果 / 1 出错 / 2 参数错误
+# 单路模式：原样透传那一路的 rc；双路模式：任一路有结果=0，两路都零结果=3，其余=1
 if [ "$ONLY" = "c" ]; then
-  if [ "$CJ_RC" != "0" ]; then echo "== 结束：直链那路失败（rc=${CJ_RC}）=="; exit 1; fi
+  echo "== 结束：直链那路 rc=$CJ_RC =="
+  exit "$CJ_RC"
 elif [ "$ONLY" = "p" ]; then
-  if [ "$PAN_RC" != "0" ]; then echo "== 结束：网盘/磁力那路失败（rc=${PAN_RC}）=="; exit 1; fi
-elif [ "$PAN_RC" != "0" ] && [ "$CJ_RC" != "0" ]; then
-  echo "== 结束：两路都失败（rc=${PAN_RC} / ${CJ_RC}）=="
-  exit 1
+  echo "== 结束：网盘/磁力那路 rc=$PAN_RC =="
+  exit "$PAN_RC"
+elif [ "$PAN_RC" = "0" ] || [ "$CJ_RC" = "0" ]; then
+  echo "== 结束：rc=0（至少一路有结果） =="
+  exit 0
+elif [ "$PAN_RC" = "3" ] && [ "$CJ_RC" = "3" ]; then
+  echo "== 结束：rc=3（两路都连通但没货） =="
+  exit 3
 fi
-echo "== 结束 =="
-exit 0
+echo "== 结束：rc=1（有路没连上：网盘/磁力=$PAN_RC，直链=$CJ_RC） =="
+exit 1
