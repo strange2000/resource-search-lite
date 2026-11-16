@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>找资源 · Resource Finder</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234f8cff'/%3E%3Ccircle cx='27' cy='27' r='12' fill='none' stroke='white' stroke-width='5'/%3E%3Cpath d='M36 36l12 12' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#f7f8fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
+<style>
+  :root{
+    color-scheme:light dark;
+    --bg:#f7f8fa;--card:#ffffff;--line:#e3e6ec;--fg:#15181f;--dim:#5c6474;
+    --acc:#2f6bff;--acc-fg:#1c4fd8;--acc-weak:rgba(47,107,255,.12);
+    --ok:#12a06a;--ok-weak:rgba(18,160,106,.14);--warn:#b8860b;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0f1115;--card:#181b22;--line:#262b36;--fg:#e8eaf0;--dim:#8b93a7;
+      --acc:#4f8cff;--acc-fg:#cfe0ff;--acc-weak:rgba(79,140,255,.16);
+      --ok:#3ecf8e;--ok-weak:rgba(62,207,142,.18);--warn:#c9a227;
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:760px;margin:0 auto;padding:14px 16px 32px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 12px;position:sticky;top:0;padding:8px 0;
+    background:linear-gradient(var(--bg) 72%,transparent);z-index:20}
+  h1{font-size:20px;margin:0;font-weight:700;white-space:nowrap}
+  .lang{display:flex;flex-shrink:0;border:2px solid var(--acc);border-radius:999px;padding:2px;background:var(--card)}
+  .lang button{background:transparent;color:var(--acc-fg);border:0;border-radius:999px;padding:7px 14px;font-size:14px;font-weight:700;min-width:56px}
+  .lang button.on{background:var(--acc);color:#fff}
+  .bar{display:flex;gap:8px}
+  input[type=search]{flex:1;min-width:0;background:var(--card);border:1px solid var(--line);color:var(--fg);
+    border-radius:12px;padding:14px;font-size:17px;outline:none}
+  input[type=search]:focus{border-color:var(--acc)}
+  #go{background:var(--acc);color:#fff;border:0;border-radius:12px;padding:14px 18px;font-size:17px;font-weight:600}
+  #go:disabled{opacity:.5}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+  .chip{background:var(--card);border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:7px 13px;font-size:14px}
+  .chip.on{background:var(--acc-weak);border-color:var(--acc);color:var(--acc-fg)}
+  .row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--dim);font-size:14px;padding:9px 14px;border-radius:10px}
+  .stat{color:var(--dim);font-size:13px;margin:14px 0 6px;min-height:18px}
+  .grp{margin:18px 0 6px;font-size:15px;color:var(--dim);display:flex;justify-content:space-between;align-items:center}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin:8px 0}
+  .t{font-size:15px;line-height:1.4;word-break:break-all}
+  .m{color:var(--dim);font-size:12.5px;margin:6px 0 8px}
+  .lk{display:flex;gap:8px;align-items:center}
+  .lk a{color:var(--acc);font-size:13px;word-break:break-all;flex:1;text-decoration:none}
+  .cp{background:var(--acc-weak);color:var(--acc-fg);border:0;border-radius:9px;padding:8px 12px;font-size:13px;font-weight:600;white-space:nowrap}
+  .cp.done{background:var(--ok-weak);color:var(--ok)}
+  .note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:10px;padding:12px;color:var(--dim);font-size:13.5px;margin:16px 0}
+  .note b{color:var(--fg)}
+  .note a{color:var(--acc)}
+  .note.bad{border-left-color:#e5484d}
+  .note.ok{border-left-color:var(--ok)}
+  .hist{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0}
+  .hist button{background:transparent;border:1px dashed var(--line);color:var(--dim);font-size:12.5px;padding:6px 10px;border-radius:9px}
+  .hist span{color:var(--dim);font-size:12.5px;align-self:center}
+  .dl{margin:14px 0 0}
+  .dl summary{cursor:pointer;color:var(--dim);font-size:13px;list-style:none}
+  .dl summary::-webkit-details-marker{display:none}
+  .dl summary::before{content:"▸ ";color:var(--acc)}
+  .dl[open] summary::before{content:"▾ "}
+  .bar2{display:flex;gap:8px;margin-top:10px}
+  .bar2 input{flex:1;background:var(--card);border:1px solid var(--line);color:var(--fg);border-radius:10px;padding:10px 12px;font-size:14px;font-family:inherit}
+  .bar2 button{background:var(--acc);color:#fff;border:0;border-radius:10px;padding:10px 16px;font-size:14px;font-weight:600}
+  video{width:100%;border-radius:12px;margin-top:10px;background:#000}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1 id="appTitle">🔍 找资源</h1>
+    <div class="lang" role="group" aria-label="Language / 语言">
+      <button id="langZh" type="button" class="on">中文</button>
+      <button id="langEn" type="button">EN</button>
+    </div>
+  </div>
+
+  <div class="bar">
+    <input id="kw" type="search" placeholder="片名 / 书名 / 课程名…" autocomplete="off" enterkeyhint="search">
+    <button id="go" type="button">搜索</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+  <div class="hist" id="hist"></div>
+
+  <div class="row">
+    <button class="ghost" id="copyAll" type="button">复制全部链接</button>
+    <button class="ghost" id="goCili" type="button">磁力搜索</button>
+    <button class="ghost" id="goApibay" type="button">apibay</button>
+    <button class="ghost" id="again" type="button">重试</button>
+  </div>
+
+  <div class="stat" id="stat"></div>
+
+  <details class="dl" id="dlBox">
+    <summary id="dlSummary">播放 / 下载直链（m3u8、mp4）</summary>
+    <div class="bar2">
+      <input id="dlUrl" type="url" placeholder="粘贴 m3u8 或 mp4 地址" autocomplete="off" enterkeyhint="go">
+      <button id="dlGo" type="button">播放</button>
+    </div>
+    <div id="dlOut"></div>
+  </details>
+
+  <div id="out"></div>
+
+  <div class="note" id="aboutNote"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ── i18n ─────────────────────────────────────────────── */
+const DICT = {
+  zh: {
+    title: "🔍 找资源",
+    ph: "片名 / 书名 / 课程名…",
+    search: "搜索",
+    copyAll: "复制全部链接",
+    cili: "磁力搜索",
+    apibay: "apibay",
+    again: "重试",
+    dlSummary: "播放 / 下载直链（m3u8、mp4）",
+    dlPh: "粘贴 m3u8 或 mp4 地址",
+    play: "播放",
+    hist: "最近：",
+    searching: "搜索中…（网盘和磁力同时查，冷查询可能要几十秒）",
+    panN: "网盘 {n} 条",
+    panNo: "网盘没结果",
+    magInline: "磁力已随结果带回",
+    magQuerying: "磁力查询中…",
+    total: "共 {n} 条",
+    subTotal: "网盘 {a} 条 · 磁力 {b} 条",
+    noResult: "没拿到结果",
+    empty: "没搜到。「{kw}」可能真没有，也可能实例在风控——隔 30–60 秒再试，或换个写法。",
+    emptyAllOk: "「{kw}」{n} 次查询都正常回答，确实没有这条资源。换片名或换写法再试；冷门新片可去豆瓣讨论区捞社群首发。",
+    emptyPartFail: "「{kw}」有 {ok} 次查询正常回答但都没有，另有 {bad} 次请求失败——失败那几次可能正好藏着结果，隔 30–60 秒再搜一次。",
+    emptyAllFail: "这次一个源都没连上（{n} 次请求全失败），不是「没有这条资源」。原因：{list}。隔 30–60 秒再来，或换一台实例。",
+    srcStat: "源 {ok}/{all} 通",
+    srcBad: "· {n} 次失败",
+    whyTimeout: "超时 {s}s",
+    whyFail: "请求失败",
+    hls: "安卓 Chrome 不认 m3u8：把这个地址丢进 VLC / nPlayer / MX Player 直接播放，或用 ffmpeg 转成 mp4。",
+    badUrl: "地址要以 http(s):// 开头",
+    copied: "已复制",
+    copy: "复制",
+    copyFail: "复制失败，长按链接手动复制",
+    copyFirst: "先搜一次",
+    typeFirst: "先在上面输入要搜的关键词，再点这个",
+    download: "下载 / 新窗口打开",
+    more: "…… 还有 {n} 条没列",
+    score: "{n}分",
+    seed: "做种 {n}",
+    note: '<b>关于磁力链接</b>：磁力走 PanSou 实例自己的 <b>magnet 通道</b>（同域名，开了跨域），所以这个页面能直接出磁力链。代价是只给标题 + 磁力链，<b>没有做种数和体积</b>；想要带做种数、按清晰度排序的完整清单，用同一仓库的命令行版。<br><b>为什么这里没有「采集接口」</b>：那些站的 JSON 接口一律不带 <code>Access-Control-Allow-Origin</code>，浏览器页面调不到；直链请用命令行的 <code>collect.sh</code> 取，再粘到上面的「播放 / 下载直链」里看。',
+    langSaved: "语言已切换"
+  },
+  en: {
+    title: "🔍 Resource Finder",
+    ph: "Movie, book, course…",
+    search: "Search",
+    copyAll: "Copy all links",
+    cili: "Magnet search",
+    apibay: "apibay",
+    again: "Retry",
+    dlSummary: "Play / open direct link (m3u8, mp4)",
+    dlPh: "Paste an m3u8 or mp4 URL",
+    play: "Play",
+    hist: "Recent:",
+    searching: "Searching… (pan + magnets in parallel; cold queries can take a while)",
+    panN: "Pan: {n}",
+    panNo: "No pan results",
+    magInline: "Magnets included",
+    magQuerying: "Fetching magnets…",
+    total: "{n} results",
+    subTotal: "Pan {a} · Magnets {b}",
+    noResult: "No results",
+    empty: 'Nothing found for "{kw}". The index may be rate-limiting — wait 30–60s, or try another spelling.',
+    emptyAllOk: '"{kw}": all {n} queries answered normally — this resource genuinely is not there. Try another title or spelling.',
+    emptyPartFail: '"{kw}": {ok} queries answered but had nothing; {bad} requests failed, so some results may be missing — retry in 30–60s.',
+    emptyAllFail: 'No source responded ({n} failed requests) — this is NOT "no such resource". Reasons: {list}. Retry in 30–60s, or switch instance.',
+    srcStat: 'sources {ok}/{all} up',
+    srcBad: '· {n} failed',
+    whyTimeout: 'timeout {s}s',
+    whyFail: 'request failed',
+    hls: "Android Chrome cannot play m3u8 directly: open the URL in VLC / nPlayer / MX Player, or convert it with ffmpeg.",
+    badUrl: "URL must start with http(s)://",
+    copied: "Copied",
+    copy: "Copy",
+    copyFail: "Copy failed — long-press the link",
+    copyFirst: "Search something first",
+    typeFirst: "Type a keyword above first",
+    download: "Download / open",
+    more: "…{n} more not shown",
+    score: "{n} pts",
+    seed: "seed {n}",
+    note: '<b>About magnets</b>: they come from the same PanSou instance\'s <b>magnet channel</b> (same origin, CORS enabled), so this page can list them directly. The trade-off: title + magnet only, <b>no seeders or size</b>. For a ranked list with seeders, use the CLI from the same repo.<br><b>No scraper endpoints here</b>: those JSON APIs never send <code>Access-Control-Allow-Origin</code>, so a browser page cannot call them. Get HLS links with <code>collect.sh</code> from the CLI, then paste one into “Play / open direct link”.'
+  }
+};
+
+const TYPES = {
+  quark:      { zh: "夸克",     en: "Quark" },
+  baidu:      { zh: "百度",     en: "Baidu" },
+  aliyun:     { zh: "阿里云盘", en: "Aliyun" },
+  uc:         { zh: "UC",       en: "UC" },
+  mobile:     { zh: "移动云盘", en: "China Mobile" },
+  tianyi:     { zh: "天翼",     en: "Tianyi" },
+  "115":      { zh: "115",      en: "115" },
+  pikpak:     { zh: "PikPak",   en: "PikPak" },
+  xunlei:     { zh: "迅雷",     en: "Xunlei" },
+  "123":      { zh: "123云盘",  en: "123 Pan" },
+  magnet:     { zh: "磁力",     en: "Magnet" },
+  others:     { zh: "其他",     en: "Others" }
+};
+
+// 固定展示顺序（"115"/"123" 这类数字样键会被 JS 引擎排到最前，不能靠 Object.keys）
+const TYPE_ORDER = ["quark","baidu","aliyun","uc","mobile","tianyi","115","pikpak","xunlei","123"];
+
+let lang = (() => {
+  const q = new URLSearchParams(location.search).get("lang");
+  if (q === "zh" || q === "en") return q;
+  const saved = localStorage.getItem("rs_lang");
+  if (saved === "zh" || saved === "en") return saved;
+  return (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
+})();
+
+function t(k, vars) {
+  let s = (DICT[lang] && DICT[lang][k]) || (DICT.zh[k] || k);
+  if (vars) for (const [key, val] of Object.entries(vars)) s = s.split("{" + key + "}").join(val);
+  return s;
+}
+function typeName(k) { return (TYPES[k] && TYPES[k][lang]) || k; }
+
+/* ── 可改：搜索实例（多台会并发查，自动用有结果的那台）────── */
+// 优先级：地址栏 ?instance=a,b → localStorage.rs_instances → 下面的内置默认
+const 实例 = (() => {
+  const q = new URLSearchParams(location.search).get("instance");
+  const raw = q || localStorage.getItem("rs_instances") || "https://so.252035.xyz";
+  return raw.split(",").map(s => s.trim().replace(/\/+$/, "")).filter(Boolean);
+})();
+
+let 选中 = new Set(["quark","baidu","aliyun","uc","mobile","tianyi","115","pikpak","xunlei","123"]);
+
+/* ── 打分（有中字、清晰度高、别太旧）─────────────────────── */
+const 加分 = [
+  [/合集|全集|全\d+季|Complete/i, 30], [/2160p|4K|UHD/i, 25], [/1080p|FHD|全高清/i, 20],
+  [/720p/i, 8], [/480p|360p/i, -20], [/REMUX/i, 15], [/BluRay|蓝光|BDRip/i, 12],
+  [/WEB-?DL|WEBRip/i, 10], [/中字|中文字幕|简繁|简中|繁中|CHS|CHT/i, 18],
+  [/双语/i, 8], [/原声|原音|日语|英语|韩语/i, 12], [/国语配音|国配|中配|台配/i, -15],
+  [/枪版|CAM|抢先/i, -50], [/水印|广告/i, -10]
+];
+const 排除 = [/预告|花絮|试看|招募|求种|已失效/i];
+function 打分(s){
+  if (排除.some(r => r.test(s))) return -999;
+  let n = 0; for (const [r,v] of 加分) if (r.test(s)) n += v; return n;
+}
+
+const $ = (id) => document.getElementById(id);
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ── 界面文案 ──────────────────────────────────────────── */
+function applyLang(){
+  document.documentElement.lang = (lang === "zh" ? "zh-CN" : "en");
+  $("appTitle").textContent = t("title");
+  $("kw").placeholder = t("ph");
+  $("go").textContent = t("search");
+  $("copyAll").textContent = t("copyAll");
+  $("goCili").textContent = t("cili");
+  $("goApibay").textContent = t("apibay");
+  $("again").textContent = t("again");
+  $("dlSummary").textContent = t("dlSummary");
+  $("dlUrl").placeholder = t("dlPh");
+  $("dlGo").textContent = t("play");
+  $("aboutNote").innerHTML = t("note");
+  $("langZh").classList.toggle("on", lang === "zh");
+  $("langEn").classList.toggle("on", lang === "en");
+  document.title = (lang === "zh" ? "找资源 · Resource Finder" : "Resource Finder · 找资源");
+  画类型();
+  画历史();
+  if (末次) { if (!渲染结果()) 画空态(); }
+}
+
+function 画类型(){
+  const box = $("chips"); box.innerHTML = "";
+  for (const k of TYPE_ORDER) {
+    if (!TYPES[k]) continue;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (选中.has(k) ? " on" : "");
+    b.textContent = typeName(k); b.dataset.k = k;
+    b.onclick = () => { if (选中.has(k)) 选中.delete(k); else 选中.add(k); b.classList.toggle("on"); };
+    box.appendChild(b);
+  }
+}
+
+/* ── 搜索 ──────────────────────────────────────────────── */
+let lastPan = null, lastMag = [], 最后结果 = [];
+
+async function 查一台(base, kw, 类型串, ms = 20000){
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), ms);
+  try{
+    const u = base + "/api/search?kw=" + encodeURIComponent(kw)
+      + "&res=merge" + (类型串 ? "&cloud_types=" + encodeURIComponent(类型串) : "");
+    const r = await fetch(u, {signal: ac.signal});
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+
+/* ── 源状态（三态：通 / 失败 / 未查）───────────────────────
+   目的：别把「实例挂了 / 超时 / 风控」报成「没有这条资源」。
+   每一次对实例的请求都记一笔，最后按 通/败 决定空结果那句提示。 */
+let 车道 = null;   // {pan:{通,败,因[]}, mag:{…}}
+let 末次 = null;   // 上一次搜索的三态汇总（切语言重绘空态时要用）
+function 新车道(){ return { 通: 0, 败: 0, 因: [] }; }
+
+async function 查并记(lane, base, kw, 类型串, ms){
+  const host = String(base).replace(/^https?:\/\//, "");
+  try{
+    const j = await 查一台(base, kw, 类型串, ms);
+    lane.通++;
+    return j;
+  }catch(e){
+    lane.败++;
+    const 因 = (e && e.name === "AbortError")
+      ? t("whyTimeout", {s: Math.round(ms / 1000)})
+      : (e && e.message ? e.message : t("whyFail"));
+    lane.因.push(host + "：" + 因);
+    return null;
+  }
+}
+
+function 画空态(){
+  if (!末次) return;
+  const { kw, 通, 败, 因 } = 末次;
+  const 全败 = 败 > 0 && 通 === 0;
+  const 部分 = 败 > 0 && 通 > 0;
+  const 文 = 全败 ? t("emptyAllFail", {n: 败, list: 因.join("；")})
+    : 部分 ? t("emptyPartFail", {kw, ok: 通, bad: 败})
+    : t("emptyAllOk", {kw, n: 通});
+  const d = document.createElement("div");
+  d.className = "note " + (全败 ? "bad" : 部分 ? "warn" : "ok");
+  d.textContent = 文;
+  $("out").appendChild(d);
+}
+
+function 复制(txt, btn){
+  const done = () => {
+    const old = btn.textContent; btn.textContent = t("copied"); btn.classList.add("done");
+    setTimeout(() => { btn.textContent = old; btn.classList.remove("done"); }, 1200);
+  };
+  const fallback = () => {
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); done(); } catch(e) { alert(t("copyFail")); }
+    document.body.removeChild(ta);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(txt).then(done).catch(fallback);
+  } else fallback();
+}
+
+function 渲染组(名, 项){
+  if (!项 || !项.length) return 0;
+  const h = document.createElement("div");
+  h.className = "grp";
+  h.innerHTML = "<span>" + esc(名) + " · " + 项.length + "</span>";
+  $("out").appendChild(h);
+  项.slice(0, 30).forEach(x => {
+    const url = x.url || "";
+    最后结果.push(url);
+    const d = document.createElement("div"); d.className = "item";
+    const 分 = 打分(x.note || "");
+    const meta = [x.datetime ? String(x.datetime).slice(0,10) : "",
+                  x.source || "",
+                  分 > 0 ? t("score", {n: 分}) : ""].filter(Boolean).join(" · ");
+    d.innerHTML = '<div class="t">' + esc(x.note || "(—)") + "</div>"
+      + '<div class="m">' + esc(meta) + "</div>"
+      + '<div class="lk"><a href="' + esc(url) + '" target="_blank" rel="noreferrer">' + esc(url) + "</a></div>";
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "cp"; b.textContent = t("copy");
+    b.onclick = () => 复制(url, b);
+    d.querySelector(".lk").appendChild(b);
+    $("out").appendChild(d);
+  });
+  if (项.length > 30) {
+    const more = document.createElement("div");
+    more.className = "m"; more.style.margin = "4px 0 0 4px";
+    more.textContent = t("more", {n: 项.length - 30});
+    $("out").appendChild(more);
+  }
+  return 项.length;
+}
+
+function 渲染结果(){
+  $("out").innerHTML = ""; 最后结果 = [];
+  const 组 = (lastPan && lastPan.merged_by_type) || {};
+  let 总 = 0;
+
+  TYPE_ORDER.forEach(k => {
+    if (!选中.has(k) || !组[k] || !组[k].length) return;
+    const 项 = 组[k].slice()
+      .filter(x => 打分(x.note || "") > -900)
+      .sort((a, b) => 打分(b.note || "") - 打分(a.note || ""));
+    总 += 渲染组(typeName(k), 项);
+  });
+
+  if (lastMag && lastMag.length) {
+    总 += 渲染组(typeName("magnet"), lastMag
+      .filter(x => 打分(x.note || "") > -900)
+      .sort((a, b) => 打分(b.note || "") - 打分(a.note || "")));
+  }
+
+  Object.keys(组).forEach(k => {
+    if (k === "magnet" || k === "others" || TYPES[k] || !组[k] || !组[k].length) return;
+    const 项 = 组[k].slice()
+      .filter(x => 打分(x.note || "") > -900)
+      .sort((a, b) => 打分(b.note || "") - 打分(a.note || ""));
+    总 += 渲染组(k, 项);
+  });
+
+  return 总;
+}
+
+async function 搜(){
+  const kw = $("kw").value.trim();
+  if (!kw) return $("kw").focus();
+  $("go").disabled = true; $("out").innerHTML = ""; 最后结果 = []; lastPan = null; lastMag = [];
+  $("stat").textContent = t("searching"); $("stat").removeAttribute("title");
+  末次 = null; 车道 = { pan: 新车道(), mag: 新车道() };
+  const t0 = Date.now();
+
+  const 网盘 = (async () => {
+    for (let 次 = 1; 次 <= 2 && !lastPan; 次++){
+      for (const base of 实例){
+        const j = await 查并记(车道.pan, base, kw, "", 次 === 1 ? 45000 : 60000);
+        if (j && j.data && j.data.total) { lastPan = j.data; return; }
+      }
+      if (!lastPan && 次 === 1) await new Promise(r => setTimeout(r, 2500));
+    }
+  })();
+
+  await 网盘;
+  $("go").disabled = false;
+
+  const 组 = (lastPan && lastPan.merged_by_type) || {};
+  let 磁项 = (组.magnet || []).slice();
+  if (!磁项.length) {
+    for (let 次 = 1; 次 <= 2; 次++){
+      for (const base of 实例){
+        const j = await 查并记(车道.mag, base, kw, "magnet", 次 === 1 ? 30000 : 45000);
+        if (j && j.data && j.data.total) {
+          磁项 = (j.data.merged_by_type && j.data.merged_by_type.magnet) || [];
+          if (磁项.length) break;
+        }
+      }
+      if (磁项.length) break;
+      if (次 === 1) await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  lastMag = 磁项;
+
+  const 总 = 渲染结果();
+  const 通 = 车道.pan.通 + 车道.mag.通;
+  const 败 = 车道.pan.败 + 车道.mag.败;
+  末次 = { kw, 通, 败, 因: 车道.pan.因.concat(车道.mag.因), 总 };
+
+  if (!总) 画空态();
+
+  const 分项 = [[typeName("magnet"), lastMag.length]]
+    .filter(x => x[1]).map(x => x[0] + " " + x[1]).join(" · ");
+  const 源串 = (通 + 败)
+    ? " · " + t("srcStat", {ok: 通, all: 通 + 败}) + (败 ? " " + t("srcBad", {n: 败}) : "")
+    : "";
+  $("stat").textContent = (总 ? t("total", {n: 总}) : t("noResult"))
+    + (分项 ? "（" + 分项 + "）" : "")
+    + 源串
+    + " · " + ((Date.now() - t0) / 1000).toFixed(1) + "s";
+  if (败) $("stat").title = 末次.因.join("\n");
+}
+
+/* ── 历史 ──────────────────────────────────────────────── */
+const 历史键 = "rs_hist_v1";
+function 读历史(){ try { return JSON.parse(localStorage.getItem(历史键) || "[]"); } catch(e){ return []; } }
+function 记历史(kw){
+  let a = 读历史().filter(x => x !== kw); a.unshift(kw); a = a.slice(0, 12);
+  try { localStorage.setItem(历史键, JSON.stringify(a)); } catch(e){}
+  画历史();
+}
+function 画历史(){
+  const a = 读历史(); const box = $("hist"); if (!box) return;
+  box.innerHTML = ""; if (!a.length) return;
+  const 标 = document.createElement("span"); 标.textContent = t("hist"); box.appendChild(标);
+  a.forEach(k => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = k;
+    b.onclick = () => { $("kw").value = k; 搜(); };
+    box.appendChild(b);
+  });
+}
+
+/* ── 直链播放 ──────────────────────────────────────────── */
+const 是HLS = (u) => /\.m3u8(\?|$)/i.test(u);
+$("dlGo").onclick = () => {
+  const u = ($("dlUrl").value || "").trim();
+  const 出 = $("dlOut"); 出.innerHTML = "";
+  if (!/^https?:\/\//i.test(u)) { 出.innerHTML = '<div class="note">' + esc(t("badUrl")) + "</div>"; return; }
+  if (是HLS(u)) {
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const v = document.createElement("video");
+    v.controls = true; v.playsInline = true; v.src = u;
+    出.appendChild(v);
+    if (!iOS) {
+      const p = document.createElement("div"); p.className = "note";
+      p.innerHTML = esc(t("hls"));
+      出.appendChild(p);
+    }
+    const row = document.createElement("div"); row.className = "lk"; row.style.marginTop = "8px";
+    const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noreferrer"; a.textContent = u;
+    const b = document.createElement("button"); b.type = "button"; b.className = "cp"; b.textContent = t("copy");
+    b.onclick = () => 复制(u, b);
+    row.appendChild(a); row.appendChild(b); 出.appendChild(row);
+  } else {
+    const v = document.createElement("video");
+    v.controls = true; v.playsInline = true; v.preload = "metadata"; v.src = u;
+    出.appendChild(v);
+    const row = document.createElement("div"); row.className = "lk"; row.style.marginTop = "8px";
+    const a = document.createElement("a"); a.href = u; a.target = "_blank"; a.rel = "noreferrer"; a.download = ""; a.textContent = t("download");
+    const b = document.createElement("button"); b.type = "button"; b.className = "cp"; b.textContent = t("copy");
+    b.onclick = () => 复制(u, b);
+    row.appendChild(a); row.appendChild(b); 出.appendChild(row);
+  }
+};
+$("dlUrl").addEventListener("keydown", e => { if (e.key === "Enter") $("dlGo").click(); });
+
+/* ── 外站 ──────────────────────────────────────────────── */
+function 开站(u){
+  const w = window.open(u, "_blank");
+  if (!w) location.href = u;
+}
+function 站词(){
+  const k = $("kw").value.trim();
+  if (!k) { $("stat").textContent = t("typeFirst"); $("kw").focus(); return ""; }
+  return k;
+}
+$("goCili").onclick = () => { const k = 站词(); if (k) 开站("https://cilisousuo.cc/search?q=" + encodeURIComponent(k)); };
+$("goApibay").onclick = () => { const k = 站词(); if (k) 开站("https://apibay.org/q.php?q=" + encodeURIComponent(k) + "&cat=0"); };
+
+/* ── 绑定 ──────────────────────────────────────────────── */
+$("go").onclick = 搜;
+$("kw").addEventListener("keydown", e => { if (e.key === "Enter") 搜(); });
+$("again").onclick = () => { if ($("kw").value.trim()) 搜(); else $("kw").focus(); };
+$("copyAll").onclick = (e) => {
+  if (!最后结果.length) return alert(t("copyFirst"));
+  复制(最后结果.join("\n"), e.currentTarget);
+};
+$("langZh").onclick = () => { lang = "zh"; localStorage.setItem("rs_lang", lang); applyLang(); };
+$("langEn").onclick = () => { lang = "en"; localStorage.setItem("rs_lang", lang); applyLang(); };
+
+/* 搜成功后记历史 */
+const 原搜 = 搜;
+搜 = async function(){
+  await 原搜();
+  const kw = $("kw").value.trim();
+  if (kw) 记历史(kw);
+};
+$("go").onclick = 搜;
+$("kw").addEventListener("keydown", e => { if (e.key === "Enter") 搜(); });
+
+applyLang();
+</script>
+</body>
+</html>
