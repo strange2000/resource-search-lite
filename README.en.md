@@ -22,6 +22,7 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 - 🎬 **Direct links** — 14 Apple CMS scraper endpoints; outputs `site / title / m3u8 or mp4`.
 - 📡 **Douban first-run links** — scan a movie's discussion threads by Douban subject ID.
 - 🎞️ **m3u8 to disk** — pull an HLS stream into local `.ts` files; handles multi-bitrate, relative paths and fMP4.
+- 📝 **Subtitles** — subhd subtitles converted to standard SRT; `--预览 <sid>` is the reliable path.
 - 🌐 **One-file web page** — open it and go, bilingual UI with a `中文 / EN` switch.
 - 🧮 **Editable rules** — one regex per line in `scripts/rules.tsv`, effective immediately.
 
@@ -68,6 +69,9 @@ bash scripts/社群首发.sh 37817151
 
 # pull an m3u8 into local .ts (grab 6 segments first)
 bash scripts/m3u8取流.sh "https://…/index.m3u8" --名 title --片 6
+
+# fetch subtitles and convert to SRT (sid is the reliable path)
+bash scripts/字幕.sh --预览 rvMUEC
 
 # connectivity self-test
 bash scripts/find.sh --测
@@ -161,6 +165,24 @@ It handles master playlists (picks the highest `BANDWIDTH`), relative URLs, `EXT
 
 Output is `.ts`, not mp4. To remux on a computer: `ffmpeg -i x.ts -c copy -bsf:a aac_adtstoasc x.mp4`. A full movie can be thousands of segments and hundreds of MB — avoid doing it on mobile data.
 
+## 📝 Subtitles (subhd → SRT)
+
+`scripts/字幕.sh` pulls Chinese subtitles from subhd and converts them to standard SRT:
+
+```bash
+bash scripts/字幕.sh --预览 rvMUEC                  # fetch by sid (most reliable)
+bash scripts/字幕.sh "真实 2017" --取 1 --页面 1     # keyword search (experimental)
+bash scripts/字幕.sh --预览 rvMUEC --目录 ./subs     # output directory
+```
+
+Timeline: start times come from `[HH:MM:SS]`; each cue ends 0.15 s before the next one (capped at +7 s), cues shorter than 0.4 s are padded to 1.2 s, the last cue gets +3 s, and milliseconds are zero-padded to 3 digits. One measured sid produced 494 cues, roughly 30 KB of SRT.
+
+Known limits:
+
+- All three subhd domains resolve in China, but **a single request takes 9–30 s** and sometimes stalls silently; the script retries across domains.
+- **Keyword search is unreliable**: the site now goes `search → /d/<id> → /a/<sid>`, and search pages are full of recommended `/d/` links. When the title match fails the script lists candidates and stops instead of guessing; prefer `--预览 <sid>`.
+- No ffprobe, so `--视频` timeline alignment is skipped; `--到115` is not supported.
+
 ## 🧮 Scoring
 
 `scripts/rules.tsv` is `regex<TAB>points<TAB>label` per line, matched with `grep -E`, case-insensitive:
@@ -191,10 +213,13 @@ resource-search-lite/
 │   ├── all.sh             All three lanes at once
 │   ├── 社群首发.sh         Douban threads (argument is a subject ID)
 │   ├── m3u8取流.sh        m3u8 → local .ts
+│   ├── 字幕.sh            subhd subtitles → SRT (--预览 <sid>)
 │   └── rules.tsv          Scoring rules
 └── web/
     ├── index.html         Single-file web page (bilingual)
-    └── assets/banner.svg  Cover image
+    └── assets/
+        ├── banner.svg     Cover image
+        └── social-preview.png  Social preview
 ```
 
 ## 🛡️ Privacy
