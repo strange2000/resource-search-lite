@@ -37,6 +37,10 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 
 The two parts are **independent**: for the web page download the single file `web/index.html`; for the CLI copy the single folder `scripts/`.
 
+> 📦 **Not cloning?** The [Releases](https://github.com/strange2000/resource-search-lite/releases) page carries **two independent assets** — take whichever you need:
+> `resource-search-lite-web-<date>.html` (single-file web page, just download and open) · `resource-search-lite-skill-<date>.tar.gz` (CLI version, unpacks to a `resource-search-lite/` folder).
+> Both are byte-identical to the same paths in the repo; `SHA256SUMS.txt` is included. Asset names must be ASCII, so rename the downloaded `.html` to whatever you like.
+
 ## 🚀 Quick start
 
 ```bash

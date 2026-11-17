@@ -37,6 +37,10 @@
 
 两边**互不依赖**：只要网页就下载 `web/index.html` 一个文件；只要命令行就拷走 `scripts/` 一个目录。
 
+> 📦 **不想 clone？** [Releases](https://github.com/strange2000/resource-search-lite/releases) 里有**两个独立资产**，按需取一个：
+> `resource-search-lite-web-<日期>.html`（单文件网页，下载后双击即用）· `resource-search-lite-skill-<日期>.tar.gz`（命令行版，解压得 `resource-search-lite/` 目录）。
+> 两个资产与仓库同路径文件逐字节一致，另附 `SHA256SUMS.txt`。资产名只能是 ASCII，所以网页那个文件下载后想改成 `找资源.html` 自己重命名即可。
+
 ## 🚀 快速开始
 
 ```bash
