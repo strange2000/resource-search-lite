@@ -10,6 +10,7 @@
 
 <a href="README.en.md"><img src="https://img.shields.io/badge/English_Switch-2f81f7?style=for-the-badge&logo=googletranslate&logoColor=white" alt="Switch to English" height="28"></a>
 <a href="https://strange2000.github.io/"><img src="https://img.shields.io/badge/%F0%9F%8F%A0_Home-8b949e?style=for-the-badge&logo=githubpages&logoColor=white" alt="Home" height="28"></a>
+<a href="https://github.com/strange2000/resource-search-lite/releases/latest"><img src="https://img.shields.io/github/v/release/strange2000/resource-search-lite?style=for-the-badge&label=release&color=2f81f7&logo=github" alt="Latest release" height="28"></a>
 
 </div>
 
@@ -38,7 +39,7 @@
 两边**互不依赖**：只要网页就下载 `web/index.html` 一个文件；只要命令行就拷走 `scripts/` 一个目录。
 
 > 📦 **不想 clone？** [Releases](https://github.com/strange2000/resource-search-lite/releases) 里有**两个独立资产**，按需取一个：
-> `resource-search-lite-web-<日期>.html`（单文件网页，下载后双击即用）· `resource-search-lite-skill-<日期>.tar.gz`（命令行版，解压得 `resource-search-lite/` 目录）。
+> `resource-search-lite-web-1.0.0.html`（单文件网页，下载后双击即用）· `resource-search-lite-skill-1.0.0.tar.gz`（命令行版，解压得 `resource-search-lite/` 目录）。文件名里的号就是 [当前 release](https://github.com/strange2000/resource-search-lite/releases/latest) 的 tag，语义化版本 `主.次.修`：**主**=不兼容改动（参数/退出码/输出格式/文件名），**次**=新增能力（新脚本/新源/新字段/网页新功能），**修**=只修 bug。
 > 两个资产与仓库同路径文件逐字节一致，另附 `SHA256SUMS.txt`。资产名只能是 ASCII，所以网页那个文件下载后想改成 `找资源.html` 自己重命名即可。
 
 ## 🚀 快速开始

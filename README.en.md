@@ -9,6 +9,7 @@
 Keyword in → pan share links / magnet links / HLS direct links out.
 
 <a href="README.md"><img src="https://img.shields.io/badge/%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87_Switch-d29922?style=for-the-badge&logo=googletranslate&logoColor=white" alt="切换到中文" height="28"></a>
+<a href="https://github.com/strange2000/resource-search-lite/releases/latest"><img src="https://img.shields.io/github/v/release/strange2000/resource-search-lite?style=for-the-badge&label=release&color=2f81f7&logo=github" alt="Latest release" height="28"></a>
 <a href="https://strange2000.github.io/"><img src="https://img.shields.io/badge/%F0%9F%8F%A0_Home-8b949e?style=for-the-badge&logo=githubpages&logoColor=white" alt="Home" height="28"></a>
 
 </div>
@@ -38,7 +39,7 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 The two parts are **independent**: for the web page download the single file `web/index.html`; for the CLI copy the single folder `scripts/`.
 
 > 📦 **Not cloning?** The [Releases](https://github.com/strange2000/resource-search-lite/releases) page carries **two independent assets** — take whichever you need:
-> `resource-search-lite-web-<date>.html` (single-file web page, just download and open) · `resource-search-lite-skill-<date>.tar.gz` (CLI version, unpacks to a `resource-search-lite/` folder).
+> `resource-search-lite-web-1.0.0.html` (single-file web page, just download and open) · `resource-search-lite-skill-1.0.0.tar.gz` (CLI version, unpacks to a `resource-search-lite/` folder). The number in the filename is the tag of the [latest release](https://github.com/strange2000/resource-search-lite/releases/latest), semantic `major.minor.patch`: **major** = breaking change (flags, exit codes, output format, filenames), **minor** = new capability (script, source, field, web feature), **patch** = bug fix only.
 > Both are byte-identical to the same paths in the repo; `SHA256SUMS.txt` is included. Asset names must be ASCII, so rename the downloaded `.html` to whatever you like.
 
 ## 🚀 Quick start
