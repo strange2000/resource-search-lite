@@ -1,0 +1,17 @@
+# 统一换行口径：仓库 blob、工作区检出、release 资产一律 LF。
+# 目的：Windows 上 core.autocrlf=true 时，git archive 会把 shell 脚本打成 CRLF（在 Android 上直接跑不动），
+# 这里从属性层面钉死，谁在哪台机器打包都一样。
+* text=auto eol=lf
+
+# 二进制显式标注，避免被当成文本改写
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.zip binary
+*.gz binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
