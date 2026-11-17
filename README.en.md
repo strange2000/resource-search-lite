@@ -26,6 +26,8 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 - 📝 **Subtitles** — subhd subtitles converted to standard SRT; `--预览 <sid>` is the reliable path.
 - 🌐 **One-file web page** — open it and go, bilingual UI with a `中文 / EN` switch.
 - 🧮 **Editable rules** — one regex per line in `scripts/rules.tsv`, effective immediately.
+- 🎯 **Title gate** — `--留` / `--剔` take a regex and filter **before** scoring (drop wins); pan results match the share note, magnets match the title.
+- 🔁 **Two pan endpoints** — two PanSou instances built in; the fallback is only tried when the primary is unreachable or returns nothing.
 
 ## 🧩 Two independent parts
 
@@ -56,6 +58,9 @@ bash scripts/find.sh "keyword" --磁力 --条数 10
 
 # selected providers only
 bash scripts/find.sh "keyword" --类型 quark,baidu
+
+# only 1080p / 4K, and drop collections
+bash scripts/find.sh "keyword" --留 "1080p|2160p" --剔 "合集"
 
 # one link per line, pipe friendly
 bash scripts/find.sh "keyword" --只链接
@@ -121,7 +126,7 @@ RS_INSTANCE=https://your-pansou.example.com bash scripts/find.sh "keyword"
 RS_INSTANCE=https://a.example.com,https://b.example.com bash scripts/find.sh "keyword"
 ```
 
-Priority: `RS_INSTANCE` → built-in default. `config.json` is a centralized description of the same settings; the shell scripts actually read the env var and `scripts/rules.tsv`.
+Priority: `RS_INSTANCE` → built-in default. Since 2026-11-18 the built-in default is **two endpoints**: primary `https://so.252035.xyz` + fallback `https://pansou.app`. The fallback is only tried when the primary is unreachable or returns nothing (it covers roughly an order of magnitude less, so it stays a fallback). `config.json` is a centralized description of the same settings; the shell scripts actually read the env var and `scripts/rules.tsv`.
 
 ## 🌐 Web page
 
@@ -221,6 +226,9 @@ Additional rules:
 - Recency: ≤1 day +20 / ≤7 days +12 / ≤30 days +5 / >1 year −10
 - Size < 150 MB: −15
 - Any excluded word (trailer, cam, expired …) skips the row entirely
+- Funnel / spam words (join-group, WeChat, QR, Telegram …): −12 (line 21 of `rules.tsv`)
+
+`--留 <regex>` / `--剔 <regex>` filter by title **before** scoring (pan note / magnet title), drop wins, and the number removed is printed to stderr instead of silently vanishing.
 
 ## 📁 Layout
 

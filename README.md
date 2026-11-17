@@ -26,6 +26,8 @@
 - 📝 **字幕**：subhd 字幕转标准 SRT，`--预览 <sid>` 最稳
 - 🌐 **单文件网页**：双击即用，中英双语，右上角一键切换
 - 🧮 **规则可改**：`scripts/rules.tsv` 一行一条正则，改完立即生效
+- 🎯 **标题闸**：`--留` / `--剔` 直接传正则，打分**之前**按标题筛（剔除优先）；网盘按分享名、磁力按标题
+- 🔁 **主备双实例**：内置两台 PanSou，主实例连不上或没货才自动换备胎
 
 ## 🧩 两件东西 · 互不依赖
 
@@ -56,6 +58,9 @@ bash scripts/find.sh "关键词" --磁力 --条数 10
 
 # 只查指定网盘
 bash scripts/find.sh "关键词" --类型 quark,baidu
+
+# 只要 1080p / 4K，并剔掉合集
+bash scripts/find.sh "关键词" --留 "1080p|2160p" --剔 "合集"
 
 # 一行一条链接，方便管道
 bash scripts/find.sh "关键词" --只链接
@@ -109,7 +114,7 @@ RS_INSTANCE=https://your-pansou.example.com bash scripts/find.sh "关键词"
 RS_INSTANCE=https://a.example.com,https://b.example.com bash scripts/find.sh "关键词"
 ```
 
-优先级：`RS_INSTANCE` → 脚本内置默认。`config.json` 是同一份配置的集中说明，方便 fork 后统一改；shell 脚本实际读环境变量与 `scripts/rules.tsv`。
+优先级：`RS_INSTANCE` → 脚本内置默认。内置默认自 2026-11-18 起是**两台**：主 `https://so.252035.xyz` + 备胎 `https://pansou.app`；主实例连不上或一条都没搜到才换备胎（备胎覆盖率低一个量级，只当备胎）。`config.json` 是同一份配置的集中说明，方便 fork 后统一改；shell 脚本实际读环境变量与 `scripts/rules.tsv`。
 
 ## 🌐 网页版
 
@@ -209,6 +214,9 @@ bash scripts/字幕.sh --预览 rvMUEC --目录 ./subs     # 指定输出目录
 - 新近：1 天内 +20 / 7 天内 +12 / 30 天内 +5 / 一年以上 −10
 - 体积 < 150 MB：−15
 - 命中排除词（预告 / 花絮 / 枪版 / 已失效…）直接跳过
+- 引流词（加群 / 公众号 / 扫码 / 电报…）：−12（`rules.tsv` 第 21 条）
+
+`--留 <正则>` / `--剔 <正则>` 在打分**之前**按标题筛一遍（网盘按分享名、磁力按标题），**剔除优先**；被削掉的条数打到 stderr，不混进结果集。
 
 ## 📁 项目结构
 
