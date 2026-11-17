@@ -39,7 +39,7 @@ Keyword in → pan share links / magnet links / HLS direct links out.
 The two parts are **independent**: for the web page download the single file `web/index.html`; for the CLI copy the single folder `scripts/`.
 
 > 📦 **Not cloning?** The [Releases](https://github.com/strange2000/resource-search-lite/releases) page carries **two independent assets** — take whichever you need:
-> `resource-search-lite-web-1.0.0.html` (single-file web page, just download and open) · `resource-search-lite-skill-1.0.0.tar.gz` (CLI version, unpacks to a `resource-search-lite/` folder). The number in the filename is the tag of the [latest release](https://github.com/strange2000/resource-search-lite/releases/latest), semantic `major.minor.patch`: **major** = breaking change (flags, exit codes, output format, filenames), **minor** = new capability (script, source, field, web feature), **patch** = bug fix only.
+> `resource-search-lite-web-<tag>.html` (single-file web page, just download and open) · `resource-search-lite-skill-<tag>.tar.gz` (CLI version, unpacks to a `resource-search-lite/` folder). The `<tag>` in the filename is the tag of the [latest release](https://github.com/strange2000/resource-search-lite/releases/latest) (currently `v1.1.0`), semantic `major.minor.patch`: **major** = breaking change (flags, exit codes, output format, filenames), **minor** = new capability (script, source, field, web feature), **patch** = bug fix only.
 > Both are byte-identical to the same paths in the repo; `SHA256SUMS.txt` is included. Asset names must be ASCII, so rename the downloaded `.html` to whatever you like.
 
 ## 🚀 Quick start
