@@ -3,6 +3,8 @@
 # 用法：sh find.sh "关键词" [选项]
 #   --只链接              只输出链接，一行一条
 #   --磁力                只查磁力，跳过网盘（快）
+#   --留 正则             只留标题命中该正则的条目（网盘/磁力都按标题）
+#   --剔 正则             剔掉标题命中该正则的条目（比 --留 优先）
 #   --json                机器可读
 #   --类型 quark,baidu    只查指定网盘（默认全部 9 类）
 #   --条数 30             磁力最多列几条（默认 20）
@@ -14,12 +16,17 @@ set -u
 DIR=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || DIR=.
 RULES="$DIR/rules.tsv"
 UA="Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36"
-INST="${RS_INSTANCE:-https://so.252035.xyz}"
+# 实例清单：RS_INSTANCE 可逗号分隔多台；内置默认「主 + 备胎」两台。
+# pansou.app 覆盖率比主实例低一个量级、偶发 503，所以只当备胎：主实例真没货才换它。
+INST_RAW="${RS_INSTANCE:-https://so.252035.xyz,https://pansou.app}"
+INST_FIRST="${INST_RAW%%,*}"
+INST="$INST_FIRST"
 ALL_TYPES="quark,baidu,aliyun,uc,115,tianyi,xunlei,123,pikpak"
 NL=$'\n'
 AMP='&'
 
 KW=""; CTYPE=""; MODE="list"; MAG_ONLY=0; TOP=20; PAN_TOP=10; SELFTEST=0
+LIKEEP=""; LIQUIT=""   # --留 / --剔：标题闸（正则，剔除优先）
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -30,6 +37,8 @@ while [ $# -gt 0 ]; do
     --类型) shift; CTYPE=$(printf '%s' "${1:-}" | tr -d ' ') ;;
     --条数) shift; TOP="${1:-20}" ;;
     --网盘条数) shift; PAN_TOP="${1:-10}" ;;
+    --留) shift; LIKEEP="${1:-}" ;;
+    --剔) shift; LIQUIT="${1:-}" ;;
     -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
     -*) echo "未知参数：$1"; exit 2 ;;
     *) KW="$1" ;;
@@ -192,19 +201,55 @@ pan_one() { # $1=类型
   done < "$TMP/pan_$1.lines"
 }
 
-do_pansou() {
-  [ -n "$KW" ] || return 0
-  # 不传 cloud_types 结果最多；显式 --类型 时才按用户要求过滤
-  types_csv=${CTYPE:-}
+# ── 标题闸：--留 / --剔（剔除优先，正则走 grep -E -i）────────
+gate_ok() { # $1=标题 → 0 保留 / 1 丢弃
+  _g=${1:-}
+  if [ -n "$LIQUIT" ]; then
+    case "$(printf '%s' "$_g" | grep -E -i -e "$LIQUIT" 2>/dev/null)" in ?*) return 1 ;; esac
+  fi
+  if [ -n "$LIKEEP" ]; then
+    case "$(printf '%s' "$_g" | grep -E -i -e "$LIKEEP" 2>/dev/null)" in ?*) return 0 ;; *) return 1 ;; esac
+  fi
+  return 0
+}
+gate_filter_pan() { # 就地过滤 $TMP/pan.tsv（按 note/标题列）
+  [ -n "$LIKEEP$LIQUIT" ] || return 0
+  [ -s "$TMP/pan.tsv" ] || return 0
+  _b=$(wc -l < "$TMP/pan.tsv" | tr -d ' ')
+  : > "$TMP/pan.f"
+  while IFS=$'\t' read -r tp url note dtm src pw; do
+    gate_ok "$note" && printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$tp" "$url" "$note" "$dtm" "$src" "$pw" >> "$TMP/pan.f"
+  done < "$TMP/pan.tsv"
+  mv "$TMP/pan.f" "$TMP/pan.tsv"
+  _a=$(wc -l < "$TMP/pan.tsv" | tr -d ' ')
+  [ "$_b" -gt "$_a" ] && echo "（--留/--剔：网盘削掉 $((_b - _a)) 条）" >&2
+  return 0
+}
+gate_filter_mag() { # 就地过滤 $TMP/mag.tsv（按标题列）
+  [ -n "$LIKEEP$LIQUIT" ] || return 0
+  [ -s "$TMP/mag.tsv" ] || return 0
+  _b=$(wc -l < "$TMP/mag.tsv" | tr -d ' ')
+  : > "$TMP/mag.f"
+  while IFS=$'\t' read -r src ttl mag sz sd dt; do
+    gate_ok "$ttl" && printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$src" "$ttl" "$mag" "$sz" "$sd" "$dt" >> "$TMP/mag.f"
+  done < "$TMP/mag.tsv"
+  mv "$TMP/mag.f" "$TMP/mag.tsv"
+  _a=$(wc -l < "$TMP/mag.tsv" | tr -d ' ')
+  [ "$_b" -gt "$_a" ] && echo "（--留/--剔：磁力削掉 $((_b - _a)) 条）" >&2
+  return 0
+}
+
+# 单台实例试一次：主实例没货时由 do_pansou 换下一台
+_pan_try() { # $1=cloud_types
   PAN_OK=0
   : > "$TMP/pan.tsv"
-  pan_fetch "$types_csv" > "$TMP/pan.json"
-  if ! grep -q '"code":0' "$TMP/pan.json" 2>/dev/null; then
+  pan_fetch "$1" > "$TMP/pan_inst.json"
+  if ! grep -q '"code":0' "$TMP/pan_inst.json" 2>/dev/null; then
     sleep 3
-    pan_fetch "$types_csv" > "$TMP/pan.json"
+    pan_fetch "$1" > "$TMP/pan_inst.json"
   fi
-  if grep -q '"code":0' "$TMP/pan.json" 2>/dev/null && grep -q 'merged_by_type' "$TMP/pan.json" 2>/dev/null; then
-    PAN_OK=1; pan_parse_merge "$TMP/pan.json"
+  if grep -q '"code":0' "$TMP/pan_inst.json" 2>/dev/null && grep -q 'merged_by_type' "$TMP/pan_inst.json" 2>/dev/null; then
+    PAN_OK=1; pan_parse_merge "$TMP/pan_inst.json"
   else
     # 兜底：按类型并发（20 秒一个，谁先回算谁）
     for t in $(printf '%s' "${CTYPE:-$ALL_TYPES}" | tr ',' ' '); do pan_one "$t" & done
@@ -213,6 +258,27 @@ do_pansou() {
       [ -s "$TMP/pan_$t.tsv" ] && cat "$TMP/pan_$t.tsv" >> "$TMP/pan.tsv"
     done
   fi
+}
+
+do_pansou() {
+  [ -n "$KW" ] || return 0
+  # 不传 cloud_types 结果最多；显式 --类型 时才按用户要求过滤
+  types_csv=${CTYPE:-}
+  PAN_OK=0
+  _oIFS="$IFS"
+  IFS=','
+  for _inst in $INST_RAW; do
+    IFS="$_oIFS"
+    INST="$_inst"
+    _pan_try "$types_csv"
+    if [ "$PAN_OK" = "1" ] && [ -s "$TMP/pan.tsv" ]; then
+      [ "$_inst" = "$INST_FIRST" ] || echo "（主实例没货，已改用备胎 $_inst）" >&2
+      break
+    fi
+    IFS=','
+  done
+  INST="$INST_FIRST"
+  IFS="$_oIFS"
   if [ ! -s "$TMP/pan.tsv" ]; then
     echo "（网盘源本轮没返回结果：风控或超时。隔 30–60 秒重跑通常就好）" >&2
   fi
@@ -337,14 +403,20 @@ score_all() {
 if [ "$SELFTEST" = "1" ]; then
   echo "== 自检 =="
   HAS_KW=0; [ -n "$KW" ] && HAS_KW=1
-  echo -n "PanSou $INST … "
   KW=${KW:-三体}
-  pan_fetch "" > "$TMP/t.json"   # 自检也走「不传类型」，跟主查询保持一致
-  if grep -q '"code":0' "$TMP/t.json" 2>/dev/null; then
-    echo "OK $(grep -o '"total":[0-9]*' "$TMP/t.json" | head -1)"
-  else
-    echo "失败（风控/超时，稍后再试）"
-  fi
+  _oIFS2="$IFS"; IFS=','
+  for _i in $INST_RAW; do          # 每台实例都探一遍（主 + 备胎）
+    IFS="$_oIFS2"; INST="$_i"
+    echo -n "PanSou $INST … "
+    pan_fetch "" > "$TMP/t.json"   # 自检也走「不传类型」，跟主查询保持一致
+    if grep -q '"code":0' "$TMP/t.json" 2>/dev/null; then
+      echo "OK $(grep -o '"total":[0-9]*' "$TMP/t.json" | head -1)"
+    else
+      echo "失败（风控/超时，稍后再试）"
+    fi
+    IFS=','
+  done
+  INST="$INST_FIRST"; IFS="$_oIFS2"
   echo -n "knaben … "
   curl -sS -m 20 -o /dev/null -w "HTTP %{http_code} %{time_total}s\n" -X POST \
     -H "Content-Type: application/json" -A "$UA" \
@@ -361,8 +433,9 @@ fi
 [ -n "$KW" ] || { sed -n '2,12p' "$0"; exit 2; }
 
 # ── 抓取 ──────────────────────────────────────────────────
-if [ "$MAG_ONLY" = "0" ]; then do_pansou; else : > "$TMP/pan.tsv"; fi
+if [ "$MAG_ONLY" = "0" ]; then do_pansou; gate_filter_pan; else : > "$TMP/pan.tsv"; fi
 do_magnets
+gate_filter_mag
 score_all
 
 # 有哪些类型有结果（从结果里取，magnet/ed2k 不在网盘分组里显示）
